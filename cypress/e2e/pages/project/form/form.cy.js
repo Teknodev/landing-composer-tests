@@ -53,9 +53,14 @@ describe('Project Form — full page audit', () => {
       cy.get('body', { timeout: 20000 }).should('contain.text', 'Forms');
     });
 
-    it('renders the page container with a divider element under the header', () => {
+    it('renders the page container under the header once the project resolves', () => {
+      // The header divider is a CSS border (form.module.scss), not an <hr> element,
+      // so assert the page body region mounts after the project fetch resolves.
       cy.get('body', { timeout: 20000 }).should('contain.text', 'Forms');
-      cy.get('hr', { timeout: 10000 }).should('have.length.at.least', 1);
+      cy.wait('@getProject', { timeout: 20000 });
+      cy.get('[class*="container"], [class*="content"]', { timeout: 15000 })
+        .first()
+        .should('exist');
     });
   });
 

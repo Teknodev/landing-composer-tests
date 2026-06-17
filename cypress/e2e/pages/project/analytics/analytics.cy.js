@@ -23,13 +23,20 @@ let ANALYTICS_URL;
 // endpoint with different `filter` bodies — there are NO separate
 // getAnalytics / getReferralAnalytics / getLeadAnalytics / getBounceRate
 // endpoints. Final URL = `${VITE_API_URL}/fn-execute/resource/<id>/analytics`
+// The analytics endpoint returns a BARE date-keyed map ({ "M/D/YYYY-H": {...} }),
+// NOT a { data: [] } wrapper. The prefabs feed the response straight into
+// AnalyticsService.groupDataByGranularity, which iterates Object.entries(...) and
+// parses each key as a date. An empty map ({}) is the correct empty-state stub —
+// a { data: [] } wrapper makes the service treat "data" as a date key and crash
+// in formatDate (padStart of undefined). See scope-endpoints-no-client-filter R4.
+const EMPTY_ANALYTICS = {};
+// All four prefabs (VisitorMetrics, Referral, Lead, BounceRate) POST to the SAME
+// endpoint (/resource/:id/analytics) with different {from,to}(+preFilter) bodies.
+// A single intercept must serve all four — registering four intercepts on the
+// same URL glob makes Cypress route every request to only the LAST-registered
+// alias, starving the other three. One alias, asserted Nx, is the correct shape.
 const stubAnalyticsCalls = () => {
-  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: { data: [] } }).as('getAnalytics');
-  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: { data: [] } }).as(
-    'getReferralAnalytics'
-  );
-  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: { data: [] } }).as('getLeadAnalytics');
-  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: { data: [] } }).as('getBounceRate');
+  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: EMPTY_ANALYTICS }).as('getAnalytics');
 };
 
 describe('Project Analytics — Page Mount', () => {
@@ -97,25 +104,25 @@ describe('Project Analytics — Analytics Prefabs Mount', () => {
     cy.visit(ANALYTICS_URL);
   });
 
-  it('fires a network request to the analytics endpoint after page load', () => {
+  it('fires a network request to the analytics endpoint after the first prefab mounts', () => {
     cy.wait('@getAnalytics', { timeout: 20000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
   });
 
-  it('fires a network request to the referral analytics endpoint after page load', () => {
-    cy.wait('@getReferralAnalytics', { timeout: 20000 })
-      .its('response.statusCode')
-      .should('be.oneOf', [200, 304]);
+  it('fires a second analytics request (referral prefab) to the shared endpoint', () => {
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
   });
 
-  it('fires a network request to the lead analytics endpoint after page load', () => {
-    cy.wait('@getLeadAnalytics', { timeout: 20000 })
-      .its('response.statusCode')
-      .should('be.oneOf', [200, 304]);
+  it('fires a third analytics request (lead prefab) to the shared endpoint', () => {
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
   });
 
-  it('fires a network request to the bounce rate endpoint after page load', () => {
-    cy.wait('@getBounceRate', { timeout: 20000 })
-      .its('response.statusCode')
-      .should('be.oneOf', [200, 304]);
+  it('fires a fourth analytics request (bounce-rate prefab) to the shared endpoint', () => {
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 });
+    cy.wait('@getAnalytics', { timeout: 20000 }).its('response.statusCode').should('be.oneOf', [200, 304]);
   });
 });
