@@ -89,7 +89,8 @@ describe('Organizations Overview — create project entry point', () => {
   it('should open the project-setup overlay when the New Website action is invoked', () => {
     // Fallback: no data-cy on the New Website button yet. The OverlayPopup id is stable.
     cy.get('[class*="createNewButton"]', { timeout: 15000 }).first().click({ force: true });
-    cy.get('[id="project-setup"]', { timeout: 10000 }).should('exist');
+    // OverlayPopup renders with id 'overlay-project-setup' (wrapper) / 'project-setup'.
+    cy.get('[id="overlay-project-setup"], [id="project-setup"]', { timeout: 15000 }).should('exist');
   });
 });
 
@@ -103,7 +104,10 @@ describe('Organizations Overview — projects API contract', () => {
       });
     });
     cy.get('@orgId').then((orgId) => {
-      cy.intercept('GET', '**/api/fn-execute/project**').as('getProjects');
+      // Post-refactor (scope-endpoints-no-client-filter): org project lists are
+      // fetched via GET organization/:orgId/resources (scope id in the route),
+      // NOT the legacy GET /project client-filter endpoint.
+      cy.intercept('GET', `**/api/fn-execute/organization/${orgId}/resources**`).as('getProjects');
       cy.visit(`/organizations/${orgId}/overview`);
     });
   });
