@@ -73,7 +73,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
         cy.request({
           method: 'POST',
           url: `${apiUrl}/fn-execute/verifyToken`,
-          headers: { Authorization: `IDENTITY ${token}` },
+          headers: { Authorization: token },
           failOnStatusCode: false,
         }).then((verifyResponse) => {
           if (verifyResponse.status !== 200) {
@@ -114,7 +114,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
         cy.request({
           method: 'GET',
           url: `${apiUrl}/fn-execute/resource`,
-          headers: { Authorization: `IDENTITY ${token}` },
+          headers: { Authorization: token },
           failOnStatusCode: true,
         }).then((resourceResponse) => {
           const body = resourceResponse.body || [];
@@ -170,7 +170,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
       cy.request({
         method: 'GET',
         url: `${apiUrl}/fn-execute/resource`,
-        headers: { Authorization: `IDENTITY ${token}` },
+        headers: { Authorization: token },
         failOnStatusCode: true,
       }).then((resourceResponse) => {
         const body = resourceResponse.body || [];
