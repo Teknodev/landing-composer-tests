@@ -50,7 +50,7 @@ const resolveOrCreateTeamId = (token, orgId) => {
       method: 'GET',
       url: `${API_URL}/fn-execute/organization/${orgId}/team`,
       headers: { Authorization: token },
-      qs: { filter: JSON.stringify({ deleted_at: { $eq: null } }), sort: JSON.stringify({ _id: -1 }) },
+      qs: { sort: 'recent' },
       failOnStatusCode: false,
     })
     .then((res) => {
@@ -144,7 +144,8 @@ describe('Teams Overview — create project entry point', () => {
   it('should open the project-setup overlay when the New Website action is invoked', () => {
     // Fallback: no data-cy on the New Website button yet. The OverlayPopup id is stable.
     cy.get('[class*="createNewButton"]', { timeout: 15000 }).first().click({ force: true });
-    cy.get('[id="project-setup"]', { timeout: 10000 }).should('exist');
+    // OverlayPopup renders with id 'overlay-project-setup' (wrapper) / 'project-setup'.
+    cy.get('[id="overlay-project-setup"], [id="project-setup"]', { timeout: 15000 }).should('exist');
   });
 });
 
@@ -153,7 +154,13 @@ describe('Teams Overview — projects API contract', () => {
     seedTeamContext();
     cy.get('@teamId').then((teamId) => {
       cy.get('@orgId').then((orgId) => {
-        cy.intercept('GET', '**/api/fn-execute/project**').as('getProjects');
+        // Post-refactor (scope-endpoints-no-client-filter): team project lists are
+        // fetched via GET organization/:orgId/team/:teamId/resource (scope ids in
+        // the route), NOT the legacy GET /project client-filter endpoint.
+        cy.intercept(
+          'GET',
+          `**/api/fn-execute/organization/${orgId}/team/${teamId}/resource**`
+        ).as('getProjects');
         cy.visit(`/organizations/${orgId}/teams/${teamId}/overview`);
       });
     });

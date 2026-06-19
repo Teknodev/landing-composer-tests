@@ -40,8 +40,12 @@ describe('Organizations Activities — page mount', () => {
       });
     });
     cy.get('@orgId').then((orgId) => {
-      cy.intercept('POST', '**/api/fn-execute/audit_log/list**').as('getAuditLogs');
-      cy.intercept('GET', '**/api/fn-execute/audit_log**').as('getAuditLogsGet');
+      // Post-refactor (scope-endpoints-no-client-filter): org activities use the
+      // org branch GET organization/:orgId/audit-log (scope id in the route).
+      // The legacy POST audit_log/list client-filter endpoint is gone. Single
+      // intercept + single-alias wait (two overlapping intercepts would split
+      // the one request across aliases and starve the second).
+      cy.intercept('GET', '**/api/fn-execute/organization/*/audit-log**').as('getAuditLogs');
       cy.visit(`/organizations/${orgId}/activities`);
     });
   });
@@ -69,15 +73,19 @@ describe('Organizations Activities — audit log API contract', () => {
       });
     });
     cy.get('@orgId').then((orgId) => {
-      cy.intercept('POST', '**/api/fn-execute/audit_log/list**').as('getAuditLogs');
-      cy.intercept('GET', '**/api/fn-execute/audit_log**').as('getAuditLogsGet');
+      // Post-refactor (scope-endpoints-no-client-filter): org activities use the
+      // org branch GET organization/:orgId/audit-log (scope id in the route).
+      // The legacy POST audit_log/list client-filter endpoint is gone. Single
+      // intercept + single-alias wait (two overlapping intercepts would split
+      // the one request across aliases and starve the second).
+      cy.intercept('GET', '**/api/fn-execute/organization/*/audit-log**').as('getAuditLogs');
       cy.visit(`/organizations/${orgId}/activities`);
     });
   });
 
   it('should fire at least one audit-log request scoped to the current organization', () => {
     // Some backends use POST (paginated list) and some use GET — accept either.
-    cy.wait(['@getAuditLogs', '@getAuditLogsGet'], {
+    cy.wait(['@getAuditLogs'], {
       timeout: 25000,
       requestTimeout: 25000,
     }).then((interceptions) => {
@@ -88,7 +96,7 @@ describe('Organizations Activities — audit log API contract', () => {
   });
 
   it('should not return a 5xx error from the audit-log endpoint', () => {
-    cy.wait(['@getAuditLogs', '@getAuditLogsGet'], {
+    cy.wait(['@getAuditLogs'], {
       timeout: 25000,
       requestTimeout: 25000,
     }).then((interceptions) => {
@@ -138,9 +146,12 @@ describe('Organizations Activities — filter row baseline', () => {
   });
 
   it('should render the filter molecule above the table at mount time', () => {
-    // Filter molecule has no data-cy yet — assert presence via the only label-less control combo:
-    // a column selector + filter input. We anchor on any element under the activities container class.
-    cy.get('[class*="container"]').first().find('table').should('exist');
+    // Filter molecule has no data-cy yet. The activities body wraps the filter
+    // controls + table inside the same container; assert the table is present
+    // within an activities container (retry-queue, not the brittle .first()).
+    cy.get('[class*="container"]', { timeout: 25000 })
+      .find('table')
+      .should('have.length.at.least', 1);
   });
 });
 
