@@ -27,7 +27,7 @@ describe('Login', () => {
 
     cy.get('[data-cy="signin-btn"]').should('be.visible').click();
 
-    loginPage.verifyToastMessage('Username or password was incorrect.');
+    loginPage.verifyToastMessage('Invalid email or password');
   });
 
   it('non-existent email → error toast is shown', () => {
@@ -103,18 +103,18 @@ describe('Login', () => {
 
     // First attempt
     cy.get('[data-cy="signin-btn"]').should('be.visible').click();
-    loginPage.verifyToastMessage('Username or password was incorrect.');
+    loginPage.verifyToastMessage('Invalid email or password');
     cy.get('[data-cy="toast-close-btn"]').should('be.visible').click();
     cy.get('[data-cy="toast-message"]').should('not.exist');
 
     // Second attempt
     cy.get('[data-cy="signin-btn"]').should('be.visible').click();
-    loginPage.verifyToastMessage('Username or password was incorrect.');
+    loginPage.verifyToastMessage('Invalid email or password');
     cy.get('[data-cy="toast-close-btn"]').should('be.visible').click();
     cy.get('[data-cy="toast-message"]').should('not.exist');
 
     // Third attempt
     cy.get('[data-cy="signin-btn"]').should('be.visible').click();
-    loginPage.verifyToastMessage('Username or password was incorrect.');
+    loginPage.verifyToastMessage('Invalid email or password');
   });
 });
