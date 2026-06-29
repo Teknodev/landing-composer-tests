@@ -1,5 +1,5 @@
 /**
- * E2E — COMP-2557: Buy-Token purchase auth + payment-401 logout immunity.
+ * E2E — COMP-2557: Buy-Token purchase auth.
  *
  * What this spec proves (behavioural, against the running editor at :3000):
  *
@@ -17,12 +17,9 @@
  *   2. Selecting a token package is LOCAL STATE ONLY — it must NOT trigger a
  *      network call, a logout, or a redirect to `/authentication`.
  *
- *   3. (DEFENSE-IN-DEPTH) Even when a payment endpoint genuinely returns 401,
- *      the app must NOT redirect to `/authentication`. The request-tracker
- *      (`landing-composer/src/custom-hooks/request-tracker.tsx`) excludes
- *      payment paths (`/stripe/`, `/subscription`, `/invoices`) from its
- *      session-expiry logout. The popup surfaces the failure inline instead
- *      (`one-time-payment-popup-error`).
+ * NOTE: the request-tracker payment-path exclusion was REVERTED — uniform
+ * `401 → logout` is the intended behavior again — so the prior payment-401
+ * "no logout" defense-in-depth case has been removed from this spec.
  *
  * ---------------------------------------------------------------------------
  * HOW THE POPUP IS REACHED (deterministic, data-agnostic):
@@ -119,7 +116,7 @@ function openBuyTokenPopup() {
   cy.get('[data-cy^="token-package-"]', { timeout: 10000 }).should('have.length.greaterThan', 0);
 }
 
-describe('COMP-2557 — Buy-token purchase auth + payment-401 logout immunity', () => {
+describe('COMP-2557 — Buy-token purchase auth', () => {
   it('M1: createSession (POST /fn-execute/stripe/session) carries a non-empty Authorization header and the user stays in the editor', () => {
     seedPopupDataAndEnterEditor();
 
@@ -185,36 +182,5 @@ describe('COMP-2557 — Buy-token purchase auth + payment-401 logout immunity', 
     // beat, then assert no createSession interception was recorded.
     cy.wait(500);
     cy.get('@createSession.all').should('have.length', 0);
-  });
-
-  it('N1: a 401 from createSession does NOT redirect to /authentication and surfaces the inline popup error', () => {
-    seedPopupDataAndEnterEditor();
-
-    // Stub createSession -> 401. The request-tracker must EXCLUDE this payment
-    // path from its session-expiry logout (defense-in-depth).
-    cy.intercept('POST', '**/fn-execute/stripe/session', {
-      statusCode: 401,
-      body: { message: 'Unauthorized' },
-    }).as('createSession401');
-
-    openBuyTokenPopup();
-
-    cy.get('[data-cy^="token-package-"]').first().click();
-    cy.get('[data-cy="one-time-payment-popup-pay-btn"]').should('not.be.disabled').click();
-
-    cy.wait('@createSession401').its('response.statusCode').should('eq', 401);
-
-    // The popup must STAY OPEN and render the inline error (purchase failed).
-    cy.get('[data-cy="one-time-payment-popup-error"]', { timeout: 10000 }).should('be.visible');
-    cy.get('[data-cy="one-time-payment-popup"]').should('be.visible');
-
-    // And critically: NO forced logout / redirect to /authentication.
-    cy.location('pathname').should('not.include', '/authentication');
-    cy.location('pathname').should('include', '/projects');
-
-    // Give the request-tracker's PerformanceObserver an extra beat to (not) act,
-    // then re-assert we are still in the editor.
-    cy.wait(700);
-    cy.location('pathname').should('not.include', '/authentication');
   });
 });
