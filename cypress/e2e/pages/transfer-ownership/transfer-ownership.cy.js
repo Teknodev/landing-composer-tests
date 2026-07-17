@@ -6,8 +6,8 @@
  * Mounted by FOUR routes:
  *   /organizations/:orgId/confirm-transfer?token=...
  *   /organizations/:orgId/accept-transfer?token=...
- *   /resources/:resourceId/confirm-transfer?token=...
- *   /resources/:resourceId/accept-transfer?token=...
+ *   /projects/:projectId/confirm-transfer?token=...
+ *   /projects/:projectId/accept-transfer?token=...
  *
  * The component performs the corresponding transfer call on mount based on
  * URL shape, surfaces a `pending` -> `success`/`error` status message, and
@@ -80,57 +80,57 @@ describe('Transfer Ownership — organization accept route', () => {
   });
 });
 
-describe('Transfer Ownership — resource confirm route', () => {
+describe('Transfer Ownership — project confirm route', () => {
   beforeEach(() => {
     // FE source: landing-composer/src/classes/Function.ts:702 confirmResourceTransfer
-    //   POST `/resources/${resourceId}/transfer/confirm`
-    // Final URL = `${VITE_API_URL}/fn-execute/resources/<resourceId>/transfer/confirm`
-    cy.intercept('POST', '**/fn-execute/resources/*/transfer/confirm*', {
+    //   POST `/v1/projects/${projectId}/transfer/confirm`
+    // Final URL = `${VITE_API_URL}/fn-execute/v1/projects/<projectId>/transfer/confirm`
+    cy.intercept('POST', '**/fn-execute/v1/projects/*/transfer/confirm*', {
       statusCode: 200,
       body: { message: 'Resource transfer request confirmation completed successfully' },
     }).as('confirmRes');
     cy.login();
-    cy.visit('/resources/test-resource-id/confirm-transfer?token=fake-token-res-confirm');
+    cy.visit('/projects/test-resource-id/confirm-transfer?token=fake-token-res-confirm');
   });
 
-  it('should call the confirmResourceTransfer endpoint when the resource confirm-transfer route mounts with a token', () => {
+  it('should call the confirmResourceTransfer endpoint when the project confirm-transfer route mounts with a token', () => {
     cy.wait('@confirmRes', { timeout: 20000 }).its('response.statusCode').should('eq', 200);
   });
 
-  it('should strip the token query parameter from the URL after the resource confirm-transfer call resolves', () => {
+  it('should strip the token query parameter from the URL after the project confirm-transfer call resolves', () => {
     cy.wait('@confirmRes', { timeout: 20000 });
     cy.url({ timeout: 5000 }).should('not.include', 'token=');
   });
 
-  it('should redirect away from the resource confirm-transfer route after a successful response', () => {
+  it('should redirect away from the project confirm-transfer route after a successful response', () => {
     cy.wait('@confirmRes', { timeout: 20000 });
     cy.url({ timeout: 10000 }).should('not.include', '/confirm-transfer');
   });
 });
 
-describe('Transfer Ownership — resource accept route', () => {
+describe('Transfer Ownership — project accept route', () => {
   beforeEach(() => {
     // FE source: landing-composer/src/classes/Function.ts:706 acceptResourceTransfer
-    //   POST `/resources/${resourceId}/transfer/accept`
-    // Final URL = `${VITE_API_URL}/fn-execute/resources/<resourceId>/transfer/accept`
-    cy.intercept('POST', '**/fn-execute/resources/*/transfer/accept*', {
+    //   POST `/v1/projects/${projectId}/transfer/accept`
+    // Final URL = `${VITE_API_URL}/fn-execute/v1/projects/<projectId>/transfer/accept`
+    cy.intercept('POST', '**/fn-execute/v1/projects/*/transfer/accept*', {
       statusCode: 200,
       body: { message: 'Resource transfer request acceptance completed successfully' },
     }).as('acceptRes');
     cy.login();
-    cy.visit('/resources/test-resource-id/accept-transfer?token=fake-token-res-accept');
+    cy.visit('/projects/test-resource-id/accept-transfer?token=fake-token-res-accept');
   });
 
-  it('should call the acceptResourceTransfer endpoint when the resource accept-transfer route mounts with a token', () => {
+  it('should call the acceptResourceTransfer endpoint when the project accept-transfer route mounts with a token', () => {
     cy.wait('@acceptRes', { timeout: 20000 }).its('response.statusCode').should('eq', 200);
   });
 
-  it('should strip the token query parameter from the URL after the resource accept-transfer call resolves', () => {
+  it('should strip the token query parameter from the URL after the project accept-transfer call resolves', () => {
     cy.wait('@acceptRes', { timeout: 20000 });
     cy.url({ timeout: 5000 }).should('not.include', 'token=');
   });
 
-  it('should redirect away from the resource accept-transfer route after a successful response', () => {
+  it('should redirect away from the project accept-transfer route after a successful response', () => {
     cy.wait('@acceptRes', { timeout: 20000 });
     cy.url({ timeout: 10000 }).should('not.include', '/accept-transfer');
   });

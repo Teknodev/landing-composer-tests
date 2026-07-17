@@ -54,7 +54,7 @@ describe('scopeToPlayground — CSS injection scoping regression', () => {
   beforeEach(() => {
     loginToEditor();
 
-    cy.intercept('GET', `**/resource/${PROJECT_ID}/custom-components*`, {
+    cy.intercept('GET', `**/v1/projects/${PROJECT_ID}/custom-components*`, {
       body: [
         {
           _id: 'css-scope-test-id',

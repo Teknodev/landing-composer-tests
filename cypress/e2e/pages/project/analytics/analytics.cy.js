@@ -17,12 +17,12 @@
 let PROJECT_ID;
 let ANALYTICS_URL;
 
-// FE source: landing-composer/src/classes/Function.ts:567 analyticsData(resourceId, filter)
-//   POST `/resource/${resourceId}/analytics`, body { filter }
+// FE source: landing-composer/src/classes/Function.ts:567 analyticsData(projectId, filter)
+//   POST `/v1/projects/${projectId}/analytics`, body { filter }
 // All four prefabs (VisitorMetrics, Referral, Lead, BounceRate) call the SAME
 // endpoint with different `filter` bodies — there are NO separate
 // getAnalytics / getReferralAnalytics / getLeadAnalytics / getBounceRate
-// endpoints. Final URL = `${VITE_API_URL}/fn-execute/resource/<id>/analytics`
+// endpoints. Final URL = `${VITE_API_URL}/fn-execute/v1/projects/<id>/analytics`
 // The analytics endpoint returns a BARE date-keyed map ({ "M/D/YYYY-H": {...} }),
 // NOT a { data: [] } wrapper. The prefabs feed the response straight into
 // AnalyticsService.groupDataByGranularity, which iterates Object.entries(...) and
@@ -31,12 +31,12 @@ let ANALYTICS_URL;
 // in formatDate (padStart of undefined). See scope-endpoints-no-client-filter R4.
 const EMPTY_ANALYTICS = {};
 // All four prefabs (VisitorMetrics, Referral, Lead, BounceRate) POST to the SAME
-// endpoint (/resource/:id/analytics) with different {from,to}(+preFilter) bodies.
+// endpoint (/v1/projects/:id/analytics) with different {from,to}(+preFilter) bodies.
 // A single intercept must serve all four — registering four intercepts on the
 // same URL glob makes Cypress route every request to only the LAST-registered
 // alias, starving the other three. One alias, asserted Nx, is the correct shape.
 const stubAnalyticsCalls = () => {
-  cy.intercept('POST', '**/fn-execute/resource/*/analytics*', { body: EMPTY_ANALYTICS }).as('getAnalytics');
+  cy.intercept('POST', '**/fn-execute/v1/projects/*/analytics*', { body: EMPTY_ANALYTICS }).as('getAnalytics');
 };
 
 describe('Project Analytics — Page Mount', () => {
@@ -72,8 +72,8 @@ describe('Project Analytics — Page Mount', () => {
 describe('Project Analytics — AnalyticTrack Tracking IDs', () => {
   beforeEach(() => {
     stubAnalyticsCalls();
-    cy.intercept('PATCH', `**/resource/${PROJECT_ID}**`).as('patchProject');
-    cy.intercept('PUT', `**/resource/${PROJECT_ID}**`).as('putProject');
+    cy.intercept('PATCH', `**/v1/projects/${PROJECT_ID}**`).as('patchProject');
+    cy.intercept('PUT', `**/v1/projects/${PROJECT_ID}**`).as('putProject');
     cy.login();
     cy.visit(ANALYTICS_URL);
   });

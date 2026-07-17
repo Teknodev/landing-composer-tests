@@ -20,7 +20,7 @@ const PROJECT_ID = '69f515295ac7bd7572f9590c';
  * Must be called before loginToEditor() so the intercept is active during page load.
  */
 const stubLocalizationLimits = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['LOCALE_COUNT'] = { limit: 10, usage: 1 };

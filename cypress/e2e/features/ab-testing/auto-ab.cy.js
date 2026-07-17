@@ -30,7 +30,7 @@ const AWAITING_TEST_ID = 'test-auto-ab-awaiting';
 // ─── Stub helpers ────────────────────────────────────────────────────────────
 
 const stubProEntitlement = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['AB_TEST'] = { limit: 10, usage: 0 };
@@ -67,7 +67,7 @@ const stubAbTestsListRaw = (body) => {
 };
 
 const stubAbTestDetail = (body) => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}/ab-test/**`, {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}/ab-tests/**`, {
     statusCode: 200,
     body,
   }).as('getAbTestDetail');
@@ -112,7 +112,7 @@ const stubApplyPending = (
 };
 
 const stubRejectPending = () => {
-  cy.intercept('PATCH', `**/resource/${PROJECT_ID}/ab-test/**`, {
+  cy.intercept('PATCH', `**/v1/projects/${PROJECT_ID}/ab-tests/**`, {
     statusCode: 200,
     body: { success: true },
   }).as('rejectPending');
@@ -674,7 +674,7 @@ describe('Auto-AB', () => {
         expect(interception.response.statusCode).to.eq(200);
       });
 
-      cy.intercept('GET', `**/resource/${PROJECT_ID}/ab-test/**`, {
+      cy.intercept('GET', `**/v1/projects/${PROJECT_ID}/ab-tests/**`, {
         statusCode: 200,
         body: {
           test: {
@@ -703,7 +703,7 @@ describe('Auto-AB', () => {
 
       cy.wait('@rejectPending', { timeout: 8000 }).then((interception) => {
         expect(interception.request.url).to.match(
-          new RegExp(`/resource/${PROJECT_ID}/ab-test/`),
+          new RegExp(`/v1/projects/${PROJECT_ID}/ab-tests/`),
         );
         expect(interception.request.url).to.include(
           `abTestId=${AWAITING_TEST_ID}`,

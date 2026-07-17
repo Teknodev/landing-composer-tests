@@ -24,17 +24,17 @@ const STEP2_GENERATE_WEBSITE_BUTTON = '[data-cy="ai-site-builder-pages-generate-
 
 // Routes to common API endpoints we need to stub.
 // FE source: landing-composer/src/classes/Function.ts
-//   createProject -> POST `resource` OR POST `organization/{orgId}/resource` (line 777-838)
-//   createAIWebsite -> POST `/ai/generate/${resourceId}` (line 1537)
-//   assignComponents -> POST `/ai/generation/update/${resourceId}` (line 1541)
+//   createProject -> POST `v1/projects` OR POST `v1/orgs/{orgId}/projects` (line 777-838)
+//   createAIWebsite -> POST `/v1/ai/generate/${projectId}` (line 1537)
+//   assignComponents -> POST `/v1/ai/generation/update/${projectId}` (line 1541)
 //   createAiProjectPages -> POST `/ai/generation/create/pages/${projectId}` (line 1545)
-//   updateProjectMetadata -> PATCH `resource/${resourceId}/metadata` (line 978) — NOT POST.
+//   updateProjectMetadata -> PATCH `v1/projects/${projectId}/metadata` (line 978) — NOT POST.
 // Regexes are used here to cover the optional organization-prefixed path on createProject.
-const CREATE_PROJECT_ROUTE = /\/fn-execute\/(?:organization\/[^/]+\/)?resource(?:\?|$)/;
+const CREATE_PROJECT_ROUTE = /\/fn-execute\/v1\/(?:orgs\/[^/]+\/)?projects(?:\?|$)/;
 const CREATE_AI_WEBSITE_ROUTE = '**/fn-execute/ai/generate/*';
 const ASSIGN_COMPONENTS_ROUTE = '**/fn-execute/ai/generation/update/*';
 const CREATE_AI_PAGES_ROUTE = '**/fn-execute/ai/generation/create/pages/*';
-const UPDATE_PROJECT_META_ROUTE = '**/fn-execute/resource/*/metadata*';
+const UPDATE_PROJECT_META_ROUTE = '**/fn-execute/v1/projects/*/metadata*';
 
 // Stub history.state for step 2 — bypasses the upstream API calls when we
 // only need to drive the canvas / page card / category panel UI.

@@ -106,8 +106,8 @@ describe('Project Cookie — Device Toggle', () => {
 
 describe('Project Cookie — Save', () => {
   beforeEach(() => {
-    cy.intercept('PATCH', `**/resource/${PROJECT_ID}**`).as('patchProject');
-    cy.intercept('PUT', `**/resource/${PROJECT_ID}**`).as('putProject');
+    cy.intercept('PATCH', `**/v1/projects/${PROJECT_ID}**`).as('patchProject');
+    cy.intercept('PUT', `**/v1/projects/${PROJECT_ID}**`).as('putProject');
     cy.intercept('POST', '**/fn-execute/patchCookiePosition**', { body: { ok: true } }).as(
       'patchCookiePosition'
     );

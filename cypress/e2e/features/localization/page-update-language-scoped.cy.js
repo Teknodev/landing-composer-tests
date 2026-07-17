@@ -56,7 +56,7 @@ const EN_EDIT = 'CY_EN_EDITED_VALUE';
  * Reset project languages to the canonical [en, tr, ab] set with `en` as
  * default and current. Best-effort; never hard-fails the test.
  *
- * NOTE: This relies on the same Spica `fn-execute/resource/{id}/languages`
+ * NOTE: This relies on the same Spica `fn-execute/v1/projects/{id}/languages`
  * endpoint that `popover-list-sync.cy.js` uses. Auth is read from the
  * editor's localStorage `token` key (set by cy.session() in loginToEditor).
  */
@@ -71,7 +71,7 @@ const resetProjectLanguagesViaApi = () => {
     // so slow /fn-execute/* roundtrips under CI load don't abort the cleanup.
     cy.request({
       method: 'PATCH',
-      url: `http://localhost:4501/api/fn-execute/resource/${PROJECT_ID}/languages`,
+      url: `http://localhost:4501/api/fn-execute/v1/projects/${PROJECT_ID}/languages`,
       headers: { Authorization: token, 'Content-Type': 'application/json' },
       body: {
         current_language: DEFAULT_LANG_CODE,

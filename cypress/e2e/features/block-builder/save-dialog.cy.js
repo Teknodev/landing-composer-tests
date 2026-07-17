@@ -6,7 +6,7 @@ describe('Block Builder - Custom Component Save Dialog', () => {
   beforeEach(() => {
     loginToEditor();
 
-    cy.intercept('GET', '**/resource/*/custom-components*', {
+    cy.intercept('GET', '**/v1/projects/*/custom-components*', {
       statusCode: 200,
       body: [
         {

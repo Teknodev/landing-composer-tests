@@ -15,7 +15,7 @@ import localizationData from '@fixtures/localizationData.json';
 const PROJECT_ID = '69f515295ac7bd7572f9590c';
 
 const stubLocalizationLimits = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['LOCALE_COUNT'] = { limit: 10, usage: 1 };
@@ -25,7 +25,7 @@ const stubLocalizationLimits = () => {
 };
 
 const stubLocalizationAtLimit = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['LOCALE_COUNT'] = { limit: 1, usage: 1 };
@@ -188,7 +188,7 @@ describe('Localization — Settings UI', () => {
   describe('Token Limit Modal', () => {
     beforeEach(() => {
       // Stub zero AI token balance so the token-limit modal triggers
-      cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+      cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
         req.continue((res) => {
           if (res.body?.data) {
             if (res.body.data.limitsAndUsage) {
@@ -292,8 +292,8 @@ describe('Localization — Settings UI', () => {
     });
 
     it('should fire a network save request when a language is confirmed via AI translation dialog', function () {
-      cy.intercept('PATCH', `**/resource/${PROJECT_ID}**`).as('saveProject');
-      cy.intercept('PUT', `**/resource/${PROJECT_ID}**`).as('saveProjectPut');
+      cy.intercept('PATCH', `**/v1/projects/${PROJECT_ID}**`).as('saveProject');
+      cy.intercept('PUT', `**/v1/projects/${PROJECT_ID}**`).as('saveProjectPut');
 
       cy.get('body').then(($body) => {
         const addBtn = $body.find('[data-cy="localization-add-lang-btn"]');

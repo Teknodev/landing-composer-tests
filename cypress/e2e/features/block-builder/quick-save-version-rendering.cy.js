@@ -59,7 +59,7 @@ describe('Block Builder — Quick Save version-specific rendering regression', (
     loginToEditor();
 
     // Intercept the custom components API call and stub all three versions
-    cy.intercept('GET', `**/resource/${PROJECT_ID}/custom-components*`, {
+    cy.intercept('GET', `**/v1/projects/${PROJECT_ID}/custom-components*`, {
       body: mockCustomComponents,
     }).as('getCustomComponents');
   });

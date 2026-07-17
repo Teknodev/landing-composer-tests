@@ -10,7 +10,7 @@
 //
 // Coverage:
 //   - Page mount via the Members ScopeView (title "Members")
-//   - Members table headers rendered (Name / Role / Status — resource scope)
+//   - Members table headers rendered (Name / Role / Status — project scope)
 //   - Members description count text "<N> members"
 //   - Invite popup (#invite-member-popup) does NOT exist on initial mount
 //   - Change-role popup (#change-role-popup) does NOT exist on initial mount
@@ -64,17 +64,17 @@ describe('Project Access — full page audit', () => {
   });
 
   describe('Members table headers', () => {
-    it('renders the Name column header in the ScopeView for resource scope', () => {
+    it('renders the Name column header in the ScopeView for project scope', () => {
       cy.get('body', { timeout: 20000 }).should('contain.text', 'Members');
       cy.contains('Name', { timeout: 10000 }).should('exist');
     });
 
-    it('renders the Role column header in the ScopeView for resource scope', () => {
+    it('renders the Role column header in the ScopeView for project scope', () => {
       cy.get('body', { timeout: 20000 }).should('contain.text', 'Members');
       cy.contains('Role', { timeout: 10000 }).should('exist');
     });
 
-    it('renders the Status column header in the ScopeView for resource scope', () => {
+    it('renders the Status column header in the ScopeView for project scope', () => {
       cy.get('body', { timeout: 20000 }).should('contain.text', 'Members');
       cy.contains('Status', { timeout: 10000 }).should('exist');
     });
