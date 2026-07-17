@@ -13,7 +13,7 @@ import localizationData from '@fixtures/localizationData.json';
 const PROJECT_ID = '69f515295ac7bd7572f9590c';
 
 const stubLocalizationLimits = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['LOCALE_COUNT'] = { limit: 10, usage: 1 };
@@ -37,8 +37,8 @@ describe('Localization — Edge Cases', () => {
       cy.get('[data-cy="localization-settings-page"]', { timeout: 10000 }).should('exist');
 
       // Force the next PATCH/PUT to fail with a 500
-      cy.intercept('PATCH', `**/resource/${PROJECT_ID}**`, { statusCode: 500, body: { message: 'Internal Server Error' } }).as('saveFailure');
-      cy.intercept('PUT', `**/resource/${PROJECT_ID}**`, { statusCode: 500, body: { message: 'Internal Server Error' } }).as('saveFailurePut');
+      cy.intercept('PATCH', `**/v1/projects/${PROJECT_ID}**`, { statusCode: 500, body: { message: 'Internal Server Error' } }).as('saveFailure');
+      cy.intercept('PUT', `**/v1/projects/${PROJECT_ID}**`, { statusCode: 500, body: { message: 'Internal Server Error' } }).as('saveFailurePut');
     });
 
     afterEach(() => {

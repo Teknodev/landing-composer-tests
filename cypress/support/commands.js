@@ -108,12 +108,12 @@ Cypress.Commands.add('login', (overrides = {}) => {
         // Dynamically discover a project the authenticated user actually
         // owns/has access to. Hardcoded project ids in specs break whenever
         // fixtures are reseeded or ownership changes; this resolves that by
-        // calling the same GET /resource endpoint the editor's
+        // calling the same GET /v1/projects endpoint the editor's
         // Function.getProjects() uses, picking the first non-deleted entry,
         // and parking it on Cypress.env('testProjectId') for cy.getTestProjectId().
         cy.request({
           method: 'GET',
-          url: `${apiUrl}/fn-execute/resource`,
+          url: `${apiUrl}/fn-execute/v1/projects`,
           headers: { Authorization: token },
           failOnStatusCode: true,
         }).then((resourceResponse) => {
@@ -121,7 +121,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
           const projects = Array.isArray(body) ? body : (body.data || []);
           if (!projects.length) {
             throw new Error(
-              '[cy.login] GET /resource returned zero projects — test fixture is broken. ' +
+              '[cy.login] GET /v1/projects returned zero projects — test fixture is broken. ' +
               'The authenticated user must own at least one non-deleted project.'
             );
           }
@@ -132,7 +132,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
           const projectId = chosen._id || chosen.id;
           if (!projectId) {
             throw new Error(
-              '[cy.login] GET /resource project entry missing _id/id — ' +
+              '[cy.login] GET /v1/projects project entry missing _id/id — ' +
               `received: ${JSON.stringify(chosen)}`
             );
           }
@@ -169,7 +169,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
       }
       cy.request({
         method: 'GET',
-        url: `${apiUrl}/fn-execute/resource`,
+        url: `${apiUrl}/fn-execute/v1/projects`,
         headers: { Authorization: token },
         failOnStatusCode: true,
       }).then((resourceResponse) => {
@@ -197,7 +197,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
  *   belongs to the test user — visits to /project/<that-id>/* redirected to
  *   "/" via RoleBasedGuard's no-access path, cascading failures across every
  *   pages/project/* spec. cy.login() now discovers a real owned project via
- *   GET /resource and parks it on Cypress.env('testProjectId').
+ *   GET /v1/projects and parks it on Cypress.env('testProjectId').
  *
  * Usage:
  *   beforeEach(() => {

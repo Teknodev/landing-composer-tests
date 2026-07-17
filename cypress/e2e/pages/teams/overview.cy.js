@@ -155,11 +155,11 @@ describe('Teams Overview — projects API contract', () => {
     cy.get('@teamId').then((teamId) => {
       cy.get('@orgId').then((orgId) => {
         // Post-refactor (scope-endpoints-no-client-filter): team project lists are
-        // fetched via GET organization/:orgId/team/:teamId/resource (scope ids in
+        // fetched via GET v1/orgs/:orgId/teams/:teamId/projects (scope ids in
         // the route), NOT the legacy GET /project client-filter endpoint.
         cy.intercept(
           'GET',
-          `**/api/fn-execute/organization/${orgId}/team/${teamId}/resource**`
+          `**/api/fn-execute/v1/orgs/${orgId}/teams/${teamId}/projects**`
         ).as('getProjects');
         cy.visit(`/organizations/${orgId}/teams/${teamId}/overview`);
       });

@@ -105,9 +105,9 @@ describe('Organizations Overview — projects API contract', () => {
     });
     cy.get('@orgId').then((orgId) => {
       // Post-refactor (scope-endpoints-no-client-filter): org project lists are
-      // fetched via GET organization/:orgId/resources (scope id in the route),
+      // fetched via GET v1/orgs/:orgId/projects (scope id in the route),
       // NOT the legacy GET /project client-filter endpoint.
-      cy.intercept('GET', `**/api/fn-execute/organization/${orgId}/resources**`).as('getProjects');
+      cy.intercept('GET', `**/api/fn-execute/v1/orgs/${orgId}/projects**`).as('getProjects');
       cy.visit(`/organizations/${orgId}/overview`);
     });
   });

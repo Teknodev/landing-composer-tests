@@ -15,7 +15,7 @@
  *
  * All tests stub `POST /ai/chat` with deterministic SSE frames so the suite is
  * NOT dependent on the live LLM. The project list endpoint
- * (`GET /resource`) is also stubbed for the picker scenario.
+ * (`GET /v1/projects`) is also stubbed for the picker scenario.
  *
  * @see landing-composer/src/prefabs/ai-assistant/AiAssistantPanel.tsx
  * @see landing-composer/src/prefabs/ai-assistant/hooks/useAiChat.ts
@@ -307,7 +307,7 @@ describe('Workspace-level AI Chat', () => {
     }).as('aiChat');
 
     // Stub the project list endpoint that ProjectPickerCard fetches.
-    cy.intercept('GET', '**/api/fn-execute/resource*', {
+    cy.intercept('GET', '**/api/fn-execute/v1/projects*', {
       statusCode: 200,
       body: [
         { _id: TEST_PROJECT_ID, name: 'Test', status: 'active' },
@@ -382,7 +382,7 @@ describe('Workspace-level AI Chat', () => {
     }).as('aiChat');
 
     // Stub project list (picker will render after workspace turn).
-    cy.intercept('GET', '**/api/fn-execute/resource*', {
+    cy.intercept('GET', '**/api/fn-execute/v1/projects*', {
       statusCode: 200,
       body: [{ _id: TEST_PROJECT_ID, name: 'Test', status: 'active' }],
     }).as('resourceList');

@@ -41,9 +41,9 @@ describe('Project Form — full page audit', () => {
   beforeEach(() => {
     cy.login();
     // FE source: landing-composer/src/classes/Function.ts:383
-    //   getProject(resourceId) -> apiUtils.apiService.get(`resource/${resourceId}`)
-    // Resulting URL: <VITE_API_URL>/fn-execute/resource/<projectId>
-    cy.intercept('GET', '**/fn-execute/resource/*').as('getProject');
+    //   getProject(projectId) -> apiUtils.apiService.get(`v1/projects/${projectId}`)
+    // Resulting URL: <VITE_API_URL>/fn-execute/v1/projects/<projectId>
+    cy.intercept('GET', '**/fn-execute/v1/projects/*').as('getProject');
     cy.intercept('GET', '**/fn-execute/**form**').as('getForms');
     cy.visit(FORM_URL);
   });

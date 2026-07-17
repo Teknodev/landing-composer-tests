@@ -60,7 +60,7 @@ const resetProjectLanguagesViaApi = (langs) => {
     // so slow /fn-execute/* roundtrips under CI load don't abort the cleanup.
     cy.request({
       method: 'PATCH',
-      url: `http://localhost:4501/api/fn-execute/resource/${PROJECT_ID}/languages`,
+      url: `http://localhost:4501/api/fn-execute/v1/projects/${PROJECT_ID}/languages`,
       headers: { Authorization: token, 'Content-Type': 'application/json' },
       body: {
         current_language: DEFAULT_LANG_CODE,
@@ -89,7 +89,7 @@ const resetProjectLanguagesViaApi = (langs) => {
  * button mid-test. Mirrors the helper used in the existing localization spec.
  */
 const stubLocalizationLimits = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       if (res.body?.data?.limitsAndUsage) {
         res.body.data.limitsAndUsage['LOCALE_COUNT'] = { limit: 99, usage: 0 };

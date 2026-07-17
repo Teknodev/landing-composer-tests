@@ -40,9 +40,9 @@ describe('Project Domain — full page audit', () => {
 
   beforeEach(() => {
     // FE source: landing-composer/src/classes/Function.ts:399
-    //   getPublishedProject(resourceId, queryParams) -> apiUtils.apiService.get(`resource/${resourceId}/published`, queryParams)
-    // Resulting URL: <VITE_API_URL>/fn-execute/resource/<projectId>/published?relation=...
-    cy.intercept('GET', '**/fn-execute/resource/*/published*').as('getPublishedProject');
+    //   getPublishedProject(projectId, queryParams) -> apiUtils.apiService.get(`v1/projects/${projectId}/published`, queryParams)
+    // Resulting URL: <VITE_API_URL>/fn-execute/v1/projects/<projectId>/published?relation=...
+    cy.intercept('GET', '**/fn-execute/v1/projects/*/published*').as('getPublishedProject');
     cy.login();
     cy.visit(DOMAIN_URL);
   });
