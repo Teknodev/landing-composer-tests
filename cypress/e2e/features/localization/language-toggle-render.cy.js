@@ -59,7 +59,7 @@ const resetProjectLanguagesViaApi = () => {
     // so slow /fn-execute/* roundtrips under CI load don't abort the cleanup.
     cy.request({
       method: 'PATCH',
-      url: `http://localhost:4501/api/fn-execute/resource/${PROJECT_ID}/languages`,
+      url: `http://localhost:4501/api/fn-execute/v1/projects/${PROJECT_ID}/languages`,
       headers: { Authorization: token, 'Content-Type': 'application/json' },
       body: {
         current_language: DEFAULT_LANG_CODE,

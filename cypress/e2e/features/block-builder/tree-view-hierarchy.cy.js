@@ -41,7 +41,7 @@ describe('Block Builder → PB tree view — full hierarchy regression', () => {
       body: [],
     }).as('getCustomComponents');
 
-    cy.intercept('GET', '**/resource/*/custom-components**', {
+    cy.intercept('GET', '**/v1/projects/*/custom-components**', {
       statusCode: 200,
       body: [],
     }).as('getCustomComponentsAlt');

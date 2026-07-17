@@ -22,11 +22,11 @@ const PROJECT_ID = '69f515295ac7bd7572f9590c';
  * Inject Pro-level AB testing entitlements by intercepting the project API response.
  * Must be called before cy.visit() so the intercept fires on page load.
  *
- * Strategy: intercept GET /api/resource/<projectId> and patch the limitsAndUsage
+ * Strategy: intercept GET /api/v1/projects/<projectId> and patch the limitsAndUsage
  * to include an AB_TEST limit > 0, so canEnableABTest becomes true.
  */
 const stubAbTestingEntitlement = () => {
-  cy.intercept('GET', `**/resource/${PROJECT_ID}**`, (req) => {
+  cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {
     req.continue((res) => {
       // Patch limitsAndUsage to enable AB testing
       if (res.body?.data?.limitsAndUsage) {
