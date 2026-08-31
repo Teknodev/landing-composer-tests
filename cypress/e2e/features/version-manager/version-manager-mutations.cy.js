@@ -57,6 +57,8 @@ describe('Version Manager — mutations', () => {
 
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
     versionManagerPage.stubRestore(versionManagerData.restoreWithoutPoint);
+    resetPlayground();
+    loginToEditor();
     versionManagerPage.openPanel();
     cy.wait('@getVersions');
     versionManagerPage.openCardMenu(versionManagerData.versionListClean.versions[1]._id);
@@ -130,10 +132,12 @@ describe('Version Manager — mutations', () => {
     cy.wait('@getVersions');
     const liveId = versionManagerData.versionListDirty.live_version_id;
     versionManagerPage.openCardMenu(liveId);
-    cy.get('[data-cy="version-menu-delete"]').should('be.disabled').then(($el) => {
-      const label = $el.attr('title') || $el.attr('aria-label') || '';
-      expect(label).to.match(/live/i);
-    });
+    cy.get('[data-cy="version-menu-delete"]').should('have.attr', 'aria-disabled', 'true');
+    cy.get('[data-cy="version-menu-delete"]').parent('span').trigger('mouseover', { force: true });
+    cy.get('.MuiTooltip-tooltip, [role="tooltip"]', { timeout: 5000 })
+      .should('be.visible')
+      .invoke('text')
+      .should('match', /live/i);
   });
 
   it('M6: version-menu-delete on a snapshot card fires @removeVersion with DELETE and drops the card count by one', () => {

@@ -38,6 +38,7 @@ describe('Version Manager — panel', () => {
 
   it('2: clean draft renders version-status-strip with data-state="clean"', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
+    loginToEditor();
     openPanelWithPrecondition();
     cy.wait('@getVersions');
     versionManagerPage.getStatusStrip().should('have.attr', 'data-state', 'clean');
@@ -45,6 +46,7 @@ describe('Version Manager — panel', () => {
 
   it('3: a matched draft renders version-status-match-note holding the matched version name', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
+    loginToEditor();
     openPanelWithPrecondition();
     cy.wait('@getVersions');
     cy.get('[data-cy="version-status-match-note"]')
@@ -70,10 +72,15 @@ describe('Version Manager — panel', () => {
       .find('[data-cy="version-card-badge"][data-variant="base"]')
       .should('be.visible')
       .and('contain.text', 'BASE');
+    versionManagerPage
+      .getCard(versionManagerData.versionListDirty.base_version_id)
+      .find('[data-cy="version-card-badge"][data-variant="live"]')
+      .should('not.exist');
   });
 
   it('6: a clean draft renders the draft badge with data-variant="in-sync" and the text IN SYNC', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
+    loginToEditor();
     openPanelWithPrecondition();
     cy.wait('@getVersions');
     cy.get('[data-cy="version-draft-card"]')
@@ -106,6 +113,7 @@ describe('Version Manager — panel', () => {
 
   it('8: version-group-restore-points does not exist when the fixture holds no restore row', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
+    loginToEditor();
     openPanelWithPrecondition();
     cy.wait('@getVersions');
     cy.get('[data-cy="version-group-restore-points"]').should('not.exist');

@@ -18,6 +18,7 @@ describe('Version Manager — publish match', () => {
   });
 
   beforeEach(() => {
+    versionManagerPage.stubPublish(versionManagerData.publishMatched);
     versionManagerPage.stubVersionList(versionManagerData.versionListClean);
     loginToEditor();
   });
@@ -65,17 +66,39 @@ describe('Version Manager — publish match', () => {
     versionManagerPage.openPanel();
     cy.wait('@getVersions');
     cy.get('[data-cy="version-card"]').its('length').then((before) => {
+      const grownList = JSON.parse(JSON.stringify(versionManagerData.versionListDirty));
+      grownList.versions.unshift({
+        _id: '69f515295ac7bd7572f959a9',
+        name: 'Publish 4',
+        kind: 'publish',
+        is_live: true,
+        is_base: false,
+        content_hash: 'aa11bb22cc33dd44',
+        order: 4,
+        owner: { _id: '64aa000000000000000000f1', name: 'Ada' },
+        created_at: '2026-08-29T09:14:02.000Z',
+        data: '{"sections":[{"id":"s0","title":"Fresh publish"}]}',
+      });
+      grownList.live_version_id = '69f515295ac7bd7572f959a9';
+
       versionManagerPage.stubPublish(versionManagerData.publishUnmatched);
       cy.get('[data-cy="publish-btn"]').click({ force: true });
+      cy.get('[data-cy="publish-confirm-submit"]').click();
       cy.wait('@publishProject').its('response.body.match.matched').should('eq', false);
+
+      versionManagerPage.stubVersionList(grownList);
+      cy.get('[data-cy="version-manager-panel"]').type('{esc}');
+      cy.get('[data-cy="version-manager-panel"]').should('not.exist');
+      versionManagerPage.openPanel();
+      cy.wait('@getVersions');
       cy.get('[data-cy="version-card"]').should('have.length', before + 1);
     });
   });
 
   it('N2: an unmatched publish response never sets a matched name in the confirm dialog', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListDirty);
-    loginToEditor();
     versionManagerPage.stubPublish(versionManagerData.publishUnmatched);
+    loginToEditor();
     cy.get('[data-cy="publish-btn"]').click({ force: true });
     cy.get('[data-cy="publish-confirm-dialog"]').should('be.visible');
     cy.get('[data-cy="publish-confirm-title"]').invoke('text').should('not.match', /live again\?/);

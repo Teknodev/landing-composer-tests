@@ -6,7 +6,7 @@
         "name": "Publish 3",
         "kind": "publish",
         "is_live": true,
-        "is_base": true,
+        "is_base": false,
         "content_hash": "9f2b1c7d4e5a6b80",
         "order": 3,
         "owner": { "_id": "64aa000000000000000000f1", "name": "Ada" },
@@ -18,7 +18,7 @@
         "name": "Before the rebrand",
         "kind": "snapshot",
         "is_live": false,
-        "is_base": false,
+        "is_base": true,
         "content_hash": "1a4c8e2f7b3d6019",
         "order": 2,
         "owner": { "_id": "64aa000000000000000000f1", "name": "Ada" },
@@ -39,7 +39,7 @@
       }
     ],
     "live_version_id": "69f515295ac7bd7572f959a1",
-    "base_version_id": "69f515295ac7bd7572f959a1",
+    "base_version_id": "69f515295ac7bd7572f959a2",
     "draft_hash": "5510bd93cc02af71",
     "draft_matches_version_id": null
   },
