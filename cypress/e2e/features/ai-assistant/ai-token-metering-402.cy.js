@@ -22,8 +22,6 @@
  *     and are deferred until those stacks are reachable.
  */
 
-import { loginToEditor } from '@support/editorTestHelper';
-
 function sseBody(frames) {
   return frames
     .map((f) => `event: ${f.event}\ndata: ${JSON.stringify(f.data)}\n\n`)
@@ -39,17 +37,38 @@ function build402Body(required = 1200, available = 0) {
   };
 }
 
+const dismissOnboardingIfPresent = () => {
+  cy.get('body').then(($body) => {
+    const hasOnboarding = $body.find('[data-cy="onboarding-modal"]').length > 0;
+    if (hasOnboarding) {
+      cy.get('[aria-label="Close onboarding for now"]').first().click({ force: true });
+      cy.get('[data-cy="onboarding-modal"]', { timeout: 5000 }).should('not.exist');
+    }
+  });
+};
+
 describe('AI Token Metering — 402 insufficient_balance frontend handler', () => {
   beforeEach(() => {
-    loginToEditor();
+    // Dynamic project discovery — cy.login() resolves a project the test
+    // account actually owns via GET /v1/projects. The shared
+    // editorTestHelper.loginToEditor() visits a hardcoded fixture project id
+    // that this environment's test account does not own (403), so this spec
+    // navigates directly instead of routing through that helper.
+    cy.login();
+    cy.getTestProjectId().then((projectId) => {
+      cy.visit(`/project/${projectId}/editor/0`);
+    });
+    cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 })
+      .should('exist');
+    dismissOnboardingIfPresent();
     cy.get('[data-cy="header"]', { timeout: 15000 }).should('be.visible');
     cy.wait(1500);
   });
 
-  it('surfaces toast + AlertModal when /api/fn-execute/ai/chat returns 402 (SSE path)', () => {
+  it('surfaces toast + AlertModal when /api/fn-execute/v1/ai/chat returns 402 (SSE path)', () => {
     // chatStream uses raw fetch, not axios — verifies the AiTools.chatStream
     // 402 detection logic specifically.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 402,
         headers: { 'content-type': 'application/json' },
@@ -57,7 +76,7 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
       });
     }).as('aiChat402');
 
-    cy.get('[data-cy="ai-assistant-fab"]').should('be.visible').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').should('be.visible').click();
     cy.get('[data-cy="ai-assistant-panel"]').should('be.visible');
     cy.get('[data-cy="ai-assistant-composer-input"]').type('rewrite my hero');
     cy.get('[data-cy="ai-assistant-send"]').click();
@@ -78,7 +97,7 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
   });
 
   it('opens OneTimePaymentPopup after the user clicks "Purchase" in the AlertModal', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 402,
         headers: { 'content-type': 'application/json' },
@@ -86,13 +105,13 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
       });
     }).as('aiChat402');
 
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type('write me a tagline');
     cy.get('[data-cy="ai-assistant-send"]').click();
     cy.wait('@aiChat402');
 
     cy.get('[data-cy="purchase-tokens-alert-modal"]', { timeout: 8000 }).should('be.visible');
-    cy.get('[data-cy="purchase-tokens-cta"]').click();
+    cy.get('[data-cy="purchase-tokens-cta"]').filter(":visible").first().click();
 
     // OneTimePaymentPopup is rendered by `usePaymentPopup` and contains a
     // Stripe Elements form. Assert via the popup root data-cy.
@@ -112,7 +131,7 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
     }).as('autoContent402');
 
     // Stub other AI calls so they do not interfere.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', { statusCode: 200, body: '' });
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', { statusCode: 200, body: '' });
 
     // Trigger Auto-Content via the floating Generate button if available.
     // Fallback: manually dispatch the underlying request via the broker to
@@ -143,7 +162,7 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
     // the broker payload includes redirectUrl which the handler stores for
     // its fallback branch. This is a static-payload check — proves the
     // contract surfaces the URL into the InsufficientTokensHandler closure.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 402,
         headers: { 'content-type': 'application/json' },
@@ -151,7 +170,7 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
       });
     }).as('aiChat402');
 
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type('hello');
     cy.get('[data-cy="ai-assistant-send"]').click();
     cy.wait('@aiChat402').its('response.body').then((body) => {
@@ -159,6 +178,49 @@ describe('AI Token Metering — 402 insufficient_balance frontend handler', () =
       // present and matches the spec.
       expect(body.redirectUrl).to.eq('/account/billing/tokens');
     });
+  });
+
+  it('shows the upgrade-plan CTA alongside the purchase CTA in the exhaustion modal', () => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
+      req.reply({
+        statusCode: 402,
+        headers: { 'content-type': 'application/json' },
+        body: build402Body(1200, 0),
+      });
+    }).as('aiChat402');
+
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
+    cy.get('[data-cy="ai-assistant-composer-input"]').type('write me a headline');
+    cy.get('[data-cy="ai-assistant-send"]').click();
+    cy.wait('@aiChat402');
+
+    cy.get('[data-cy="purchase-tokens-alert-modal"]', { timeout: 8000 }).should('be.visible');
+    cy.get('[data-cy="purchase-tokens-alert-modal"]')
+      .find('[data-cy="upgrade-plan-cta"]')
+      .should('be.visible');
+    cy.get('[data-cy="purchase-tokens-alert-modal"]')
+      .find('[data-cy="purchase-tokens-cta"]')
+      .should('be.visible');
+  });
+
+  it('navigates to /plans when the upgrade-plan CTA is clicked', () => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
+      req.reply({
+        statusCode: 402,
+        headers: { 'content-type': 'application/json' },
+        body: build402Body(900, 0),
+      });
+    }).as('aiChat402');
+
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
+    cy.get('[data-cy="ai-assistant-composer-input"]').type('write me a subheading');
+    cy.get('[data-cy="ai-assistant-send"]').click();
+    cy.wait('@aiChat402');
+
+    cy.get('[data-cy="purchase-tokens-alert-modal"]', { timeout: 8000 }).should('be.visible');
+    cy.get('[data-cy="upgrade-plan-cta"]').filter(":visible").first().click();
+
+    cy.location('pathname').should('eq', '/plans');
   });
 
 });
