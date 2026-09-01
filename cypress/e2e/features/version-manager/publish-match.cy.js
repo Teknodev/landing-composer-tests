@@ -63,8 +63,6 @@ describe('Version Manager — publish match', () => {
   it('M4: an unmatched publish returns match.matched false and the version-card count grows by one', () => {
     versionManagerPage.stubVersionList(versionManagerData.versionListDirty);
     loginToEditor();
-    // The publish guard blocks an empty page — seed one real component so
-    // publish-btn's click handler reaches the confirm dialog, not a toast.
     cy.get('body').then(($body) => {
       if ($body.find('[data-component-index]').length === 0) {
         addComponent('hero', 0);

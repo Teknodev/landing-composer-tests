@@ -133,12 +133,6 @@ describe('Version Manager — mutations', () => {
     const liveId = versionManagerData.versionListDirty.live_version_id;
     versionManagerPage.openCardMenu(liveId);
     cy.get('[data-cy="version-menu-delete"]').should('have.attr', 'aria-disabled', 'true');
-    // MUI Tooltip only opens on a trusted mouse event — real-hover the
-    // wrapping span, then read the rendered tooltip node directly. This
-    // build never sets aria-describedby on the disabled MenuItem or its
-    // wrapper, so chasing that attribute times out; the Menu popover also
-    // needs a frame to settle before hover coordinates are computed, or
-    // realHover lands off the target.
     cy.wait(300);
     cy.get('[data-cy="version-menu-delete"]')
       .parent('span')
