@@ -49,11 +49,6 @@ const dismissOnboardingIfPresent = () => {
 
 describe('AI Token Metering — 402 insufficient_balance frontend handler', () => {
   beforeEach(() => {
-    // Dynamic project discovery — cy.login() resolves a project the test
-    // account actually owns via GET /v1/projects. The shared
-    // editorTestHelper.loginToEditor() visits a hardcoded fixture project id
-    // that this environment's test account does not own (403), so this spec
-    // navigates directly instead of routing through that helper.
     cy.login();
     cy.getTestProjectId().then((projectId) => {
       cy.visit(`/project/${projectId}/editor/0`);
