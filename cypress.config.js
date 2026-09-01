@@ -49,7 +49,7 @@ module.exports = defineConfig({
       // Override via CYPRESS_AUTH_USERNAME / CYPRESS_AUTH_PASSWORD env vars at runtime if needed.
       AUTH_USERNAME: "blinkpage1@hotmail.com",
       AUTH_PASSWORD: "Deneme123",
-      // Spica API base URL used by cy.login() to POST /fn-execute/login.
+      // Spica API base URL used by cy.login() to POST /fn-execute/v1/auth/login.
       // Must match the editor's VITE_API_URL (see landing-composer/.env.local).
       API_URL: "http://localhost:4501/api",
     },

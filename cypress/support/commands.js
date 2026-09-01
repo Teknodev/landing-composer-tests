@@ -15,7 +15,7 @@ Cypress.Commands.add('getCy', (value, options) => {
  *
  * - Reads credentials from Cypress env (see cypress.config.js):
  *     AUTH_USERNAME, AUTH_PASSWORD, API_URL
- * - POSTs { email, password } to ${API_URL}/fn-execute/login
+ * - POSTs { email, password } to ${API_URL}/fn-execute/v1/auth/login
  * - Persists the returned token to window.localStorage (key: 'token')
  *   so the editor's Authentication service picks it up on next visit.
  * - Wrapped in cy.session() keyed by the username so the session is
@@ -50,7 +50,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
 
       cy.request({
         method: 'POST',
-        url: `${apiUrl}/fn-execute/login`,
+        url: `${apiUrl}/fn-execute/v1/auth/login`,
         body: { email: username, password },
         failOnStatusCode: true,
       }).then((response) => {
@@ -64,7 +64,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
           win.localStorage.setItem('isAnonim', 'false');
         });
 
-        // Hardening: call the same verifyToken endpoint AppInitializer hits
+        // Hardening: call the same verify-token endpoint AppInitializer hits
         // on bootstrap. If the response is missing the shape the SPA expects
         // (specifically `user._id`) the suite must fail loudly here rather
         // than letting downstream visits redirect silently to "/". The SPA's
@@ -72,23 +72,11 @@ Cypress.Commands.add('login', (overrides = {}) => {
         // before any /project/:id/* route is visited.
         cy.request({
           method: 'POST',
-          url: `${apiUrl}/fn-execute/verifyToken`,
-          headers: { Authorization: token },
-          failOnStatusCode: false,
+          url: `${apiUrl}/fn-execute/v1/auth/verify-token`,
+          body: { token },
+          failOnStatusCode: true,
         }).then((verifyResponse) => {
-          if (verifyResponse.status !== 200) {
-            // Don't hard-fail — the endpoint name or auth header shape may
-            // vary by environment. Log and continue. The smoke check is
-            // best-effort; the real assertion is `user._id` below if the
-            // shape is reachable.
-            // eslint-disable-next-line no-console
-            console.warn(
-              '[cy.login] verifyToken smoke probe returned status',
-              verifyResponse.status,
-              '— continuing without shape assertion'
-            );
-            return;
-          }
+          expect(verifyResponse.status, '[cy.login] verifyToken status').to.eq(200);
           const body = verifyResponse.body || {};
           const user = body.user || body;
           expect(user, '[cy.login] verifyToken response.user').to.be.an('object');
@@ -159,7 +147,7 @@ Cypress.Commands.add('login', (overrides = {}) => {
   if (!Cypress.env('testProjectId')) {
     cy.request({
       method: 'POST',
-      url: `${apiUrl}/fn-execute/login`,
+      url: `${apiUrl}/fn-execute/v1/auth/login`,
       body: { email: username, password },
       failOnStatusCode: true,
     }).then((loginResp) => {
@@ -237,7 +225,7 @@ Cypress.Commands.add('getTestProjectId', () => {
  *   run first and benefit from the cache-miss path — worked fine.
  *
  * This command bypasses the window/localStorage round-trip entirely by
- * POSTing /fn-execute/login directly. It is intentionally cheap on
+ * POSTing /fn-execute/v1/auth/login directly. It is intentionally cheap on
  * localhost and runs once per test that needs a token. Combine with
  * cy.login() (still needed so editor pages bootstrap with localStorage
  * populated) — they are complementary.
@@ -263,7 +251,7 @@ Cypress.Commands.add('getAuthToken', (overrides = {}) => {
   return cy
     .request({
       method: 'POST',
-      url: `${apiUrl}/fn-execute/login`,
+      url: `${apiUrl}/fn-execute/v1/auth/login`,
       body: { email: username, password },
       failOnStatusCode: true,
     })

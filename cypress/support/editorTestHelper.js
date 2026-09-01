@@ -11,7 +11,7 @@
  *     addComponent('team', 0);
  *   });
  */
-/** The fixed test project URL — all editor tests share this project. */
+/** Legacy fallback test project URL, kept for specs that still import it directly. */
 export const TEST_PROJECT_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
 
 /**
@@ -21,12 +21,20 @@ export const TEST_PROJECT_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
  * Auth credentials are pulled from cypress.config.js env block (AUTH_USERNAME /
  * AUTH_PASSWORD). cy.login() uses cy.session() internally to cache the session
  * across tests and specs.
+ *
+ * The project id is resolved dynamically via cy.getTestProjectId() (set by
+ * cy.login()) and parked on Cypress.env('TEST_PROJECT_ID') so page objects
+ * like versionManagerPage can build project-scoped intercepts against the
+ * same real, owned project instead of a stale hardcoded id.
  */
 export const loginToEditor = () => {
   cy.login();
 
-  // Navigate to the test project editor (auth token already in localStorage).
-  cy.visit(TEST_PROJECT_URL);
+  cy.getTestProjectId().then((projectId) => {
+    Cypress.env('TEST_PROJECT_ID', projectId);
+    // Navigate to the test project editor (auth token already in localStorage).
+    cy.visit(`/project/${projectId}/editor/0`);
+  });
 
   // Wait for the editor to be fully ready:
   // Either the canvas has components OR the empty-canvas placeholder is shown.

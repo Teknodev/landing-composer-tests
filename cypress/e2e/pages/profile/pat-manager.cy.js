@@ -14,7 +14,7 @@
  * `/tmp/agent-handoff/pat-backend.json#deploy`.
  *
  * NOTE: the brief lists `pat-test@blinkpage.local` as the test identity, but the
- * Spica `/fn-execute/login` function requires a populated User row, which only
+ * Spica `/fn-execute/v1/auth/login` function requires a populated User row, which only
  * the standard fixture user (blinkpage1@hotmail.com) has. The PAT backend
  * accepts that user's JWT identically, so all assertions hold.
  */
