@@ -36,6 +36,18 @@
         "owner": null,
         "created_at": "2026-08-25T16:40:10.000Z",
         "data": "{\"sections\":[{\"id\":\"s0\",\"title\":\"Draft copy\"}]}"
+      },
+      {
+        "_id": "69f515295ac7bd7572f959a4",
+        "name": "Publish 2",
+        "kind": "publish",
+        "is_live": false,
+        "is_base": false,
+        "content_hash": "88d3b62eaa19cf07",
+        "order": 2,
+        "owner": { "_id": "64aa000000000000000000f1", "name": "Ada" },
+        "created_at": "2026-08-26T11:20:00.000Z",
+        "data": "{\"sections\":[{\"id\":\"s0\",\"title\":\"Build faster\"}]}"
       }
     ],
     "live_version_id": "69f515295ac7bd7572f959a1",

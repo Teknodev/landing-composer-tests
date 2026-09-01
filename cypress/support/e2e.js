@@ -19,6 +19,11 @@ import './commands'
 // Import cypress-drag-drop globally so all test files can use .drag()
 import '@4tw/cypress-drag-drop'
 
+// Import cypress-real-events globally so all test files can use .realHover()
+// — MUI Tooltip only opens on a trusted mouse event; cy.trigger() dispatches
+// an untrusted synthetic event that MUI silently ignores.
+import 'cypress-real-events'
+
 // ---------------------------------------------------------------------------
 // Observability: surface the RoleBasedGuard "no access" path as a visible
 // Cypress error rather than letting it silently redirect to "/".

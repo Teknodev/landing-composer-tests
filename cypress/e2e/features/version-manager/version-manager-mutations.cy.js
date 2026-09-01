@@ -133,11 +133,24 @@ describe('Version Manager — mutations', () => {
     const liveId = versionManagerData.versionListDirty.live_version_id;
     versionManagerPage.openCardMenu(liveId);
     cy.get('[data-cy="version-menu-delete"]').should('have.attr', 'aria-disabled', 'true');
-    cy.get('[data-cy="version-menu-delete"]').parent('span').trigger('mouseover', { force: true });
-    cy.get('.MuiTooltip-tooltip, [role="tooltip"]', { timeout: 5000 })
+    // MUI Tooltip only opens on a trusted mouse event, and links its trigger
+    // to the open popper via aria-describedby — real-hover the wrapping span,
+    // then read that id so a stale tooltip left open elsewhere on the page
+    // (e.g. the toolbar icon) cannot be matched instead. The Menu popover
+    // needs a frame to settle at its final position before hover coordinates
+    // are computed, or realHover lands off the target.
+    cy.wait(300);
+    cy.get('[data-cy="version-menu-delete"]')
+      .parent('span')
       .should('be.visible')
-      .invoke('text')
-      .should('match', /live/i);
+      .realHover()
+      .should('have.attr', 'aria-describedby')
+      .then((tooltipId) => {
+        cy.get(`#${tooltipId}`, { timeout: 5000 })
+          .should('be.visible')
+          .invoke('text')
+          .should('match', /live/i);
+      });
   });
 
   it('M6: version-menu-delete on a snapshot card fires @removeVersion with DELETE and drops the card count by one', () => {

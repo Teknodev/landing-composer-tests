@@ -41,6 +41,16 @@ export const loginToEditor = () => {
   // Extended timeout (30s) to handle slow loads after block-builder sessions.
   cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 })
     .should('exist');
+
+  // A user whose onboarding_data.completed is false sees a full-screen
+  // "Welcome!" stepper covering the canvas on every load. Close it so it
+  // does not block clicks on the toolbar or the canvas underneath.
+  cy.get('body').then(($body) => {
+    if ($body.find('[data-cy="onboarding-modal"]').length > 0) {
+      cy.get('[data-cy="onboarding-modal"] button[aria-label="Close onboarding for now"]').click({ force: true });
+      cy.get('[data-cy="onboarding-modal"]').should('not.exist');
+    }
+  });
 };
 
 /**
