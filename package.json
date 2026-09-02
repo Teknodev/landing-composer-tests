@@ -1,36 +1,36 @@
 {
-    "dependencies": {
-        "jquery-ui": "^1.14.1"
-    },
-    "scripts": {
-        "e2e": "cypress run --headless --spec 'cypress/e2e/uiWorkFlow/**.cy.js' --browser chrome > New-e2e-test-results.txt",
-        "cypress": "cypress open"
-    },
-    "devDependencies": {
-        "@4tw/cypress-drag-drop": "^2.2.5",
-        "@babel/core": "^7.29.7",
-        "@babel/preset-env": "^7.29.7",
-        "@cypress/webpack-preprocessor": "^7.1.0",
-        "@testing-library/cypress": "^10.0.2",
-        "babel-loader": "^9",
-        "chai": "^5.1.2",
-        "chai-jquery": "^2.1.0",
-        "cypress": "^15.16.0",
-        "cypress-drag-drop": "^1.1.1",
-        "cypress-file-upload": "^5.0.8",
-        "cypress-iframe": "^1.0.1",
-        "cypress-real-events": "^1.14.0",
-        "cypress-shadow-dom": "^1.4.1",
-        "cypress-wait-until": "^3.0.2",
-        "webpack": "^5"
-    },
-    "name": "cypresstests",
-    "version": "1.0.0",
-    "description": "We demonstrated here to set up and use Cypress for end-to-end testing with a Page Object Model (POM) framework. The POM framework helps organize test code by separating the representation of a page (or component) from the actual test scripts, making tests more maintainable and reusable.",
-    "main": "cypress.config.js",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Low-Code-Platform/CypressTests.git"
-    },
-    "author": "Shah"
+  "dependencies": {
+    "jquery-ui": "^1.14.1"
+  },
+  "scripts": {
+    "e2e": "cypress run --headless --spec 'cypress/e2e/uiWorkFlow/**.cy.js' --browser chrome > New-e2e-test-results.txt",
+    "cypress": "cypress open"
+  },
+  "devDependencies": {
+    "@4tw/cypress-drag-drop": "^2.2.5",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@cypress/webpack-preprocessor": "^7.1.0",
+    "@testing-library/cypress": "^10.0.2",
+    "babel-loader": "^9",
+    "chai": "^5.1.2",
+    "chai-jquery": "^2.1.0",
+    "cypress": "^15.16.0",
+    "cypress-drag-drop": "^1.1.1",
+    "cypress-file-upload": "^5.0.8",
+    "cypress-iframe": "^1.0.1",
+    "cypress-real-events": "^1.14.0",
+    "cypress-shadow-dom": "^1.4.1",
+    "cypress-wait-until": "^3.0.2",
+    "webpack": "^5"
+  },
+  "name": "cypresstests",
+  "version": "1.0.0",
+  "description": "We demonstrated here to set up and use Cypress for end-to-end testing with a Page Object Model (POM) framework. The POM framework helps organize test code by separating the representation of a page (or component) from the actual test scripts, making tests more maintainable and reusable.",
+  "main": "cypress.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Low-Code-Platform/CypressTests.git"
+  },
+  "author": "Shah"
 }
