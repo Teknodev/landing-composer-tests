@@ -152,7 +152,7 @@ describe('AI element picker', () => {
   beforeEach(() => {
     // Default SSE intercept — quiet "done"-only stream. Individual sub-features
     // override this in their own beforeEach when they need richer frames.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream' },
@@ -188,7 +188,7 @@ describe('AI element picker', () => {
     beforeEach(() => {
       // Override default intercept with completion frames so that the
       // payload-shape test can actually submit a turn.
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream' },
@@ -397,7 +397,7 @@ describe('AI element picker', () => {
   // -------------------------------------------------------------------------
   describe('removeChip', () => {
     beforeEach(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream' },
@@ -435,7 +435,7 @@ describe('AI element picker', () => {
   // -------------------------------------------------------------------------
   describe('requestElementSelection', () => {
     beforeEach(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream' },
@@ -484,7 +484,7 @@ describe('AI element picker', () => {
 
       // Tracker — if Cancel triggers ANY second POST to /ai/chat, this flips.
       let secondCallFired = false;
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', () => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', () => {
         secondCallFired = true;
       }).as('aiChatSecond');
 
