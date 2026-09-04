@@ -268,7 +268,7 @@ describe('Workspace-level AI Chat', () => {
   });
 
   it('runs list_projects from workspace and renders the result inline', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream' },
@@ -294,7 +294,7 @@ describe('Workspace-level AI Chat', () => {
   it('surfaces the inline project picker on missing_project_id and retries on chip click', () => {
     // First chat request → returns missing_project_id; second → succeeds.
     let callCount = 0;
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       callCount += 1;
       const frames = callCount === 1
         ? buildMissingProjectFrames()
@@ -341,7 +341,7 @@ describe('Workspace-level AI Chat', () => {
   });
 
   it('auto-injects project_id when inside a /project/:id route', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream' },
@@ -369,7 +369,7 @@ describe('Workspace-level AI Chat', () => {
     // First send in the project route should carry project_id.
     // Second send after navigating to workspace should NOT carry project_id.
     let requestBodies = [];
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       requestBodies.push(req.body);
       const frames = requestBodies.length === 1
         ? buildSuccessOnProjectRouteFrames()

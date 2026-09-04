@@ -290,7 +290,7 @@ describe('AI Assistant — 3-Phase Flow', () => {
   describe('Test 1 — Add team component: full 3-phase happy path', () => {
     beforeEach(() => {
       let firstCalled = false;
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         if (!firstCalled) {
           firstCalled = true;
           req.reply({
@@ -376,7 +376,7 @@ describe('AI Assistant — 3-Phase Flow', () => {
   // --------------------------------------------------------------------------
   describe('Test 2 — pb_list_component_types must discover Team components', () => {
     beforeEach(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -415,7 +415,7 @@ describe('AI Assistant — 3-Phase Flow', () => {
   // --------------------------------------------------------------------------
   describe('Test 3 — Cancel clears card with no mutation fired', () => {
     beforeEach(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -444,7 +444,7 @@ describe('AI Assistant — 3-Phase Flow', () => {
 
       // Track whether a second call fires — it must NOT
       let secondCallFired = false;
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', () => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', () => {
         secondCallFired = true;
       }).as('aiChatCancelSecond');
 
@@ -534,7 +534,7 @@ describe('AI Assistant — 3-Phase Flow', () => {
         },
       ];
 
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
