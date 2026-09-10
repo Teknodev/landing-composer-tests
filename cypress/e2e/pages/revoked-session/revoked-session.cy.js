@@ -60,4 +60,26 @@ describe('Revoked Session — Forced Logout', () => {
     cy.reload();
     cy.url({ timeout: 15000 }).should('not.include', '/project/');
   });
+
+  it('N4: an idle, untouched tab moves to /authentication once the periodic session check gets a 401', () => {
+    cy.clock(Date.now(), ['setInterval', 'clearInterval']);
+
+    cy.getTestProjectId().then((id) => {
+      cy.visit(`/project/${id}/overview`);
+    });
+    cy.contains('body', /./, { timeout: 15000 });
+
+    cy.intercept('POST', VERIFY_TOKEN_API, {
+      statusCode: 401,
+      body: { message: 'Your session has expired. Please log in again.' },
+    }).as('idleCheck');
+
+    cy.tick(60000);
+
+    cy.wait('@idleCheck', { timeout: 15000 });
+    cy.url({ timeout: 15000 }).should('include', '/authentication');
+    cy.window({ log: false }).then((win) => {
+      expect(win.localStorage.getItem('token')).to.be.null;
+    });
+  });
 });
