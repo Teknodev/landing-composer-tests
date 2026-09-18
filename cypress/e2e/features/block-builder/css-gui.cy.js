@@ -196,4 +196,35 @@ describe('CSS GUI - Design Controls Validation', () => {
       });
     });
   });
+
+  it('should remove the applied style when a Custom CSS property is fully deleted', () => {
+    cy.get('[data-cy="palette-item-Base.Container"]').should('be.visible').as('containerPaletteItem');
+    cy.get('[data-cy="bb-root-drop-zone"]').should('be.visible').as('dropZone');
+    cy.get('@containerPaletteItem').drag('@dropZone');
+
+    cy.get('[data-cy="bb-rendered-container"]').first().click({ force: true });
+    cy.get('[data-cy="tab-Design"]').click({ force: true });
+    cy.get('[data-cy="category-section-custom"]').scrollIntoView().should('be.visible');
+
+    cy.get('[data-cy="category-section-custom"]')
+      .find('textarea.inputarea')
+      .click({ force: true })
+      .type('{selectall}{backspace}width: 100%;', { force: true, delay: 20 });
+
+    cy.get('[data-component-name="Base.Container"]', { timeout: 10000 }).should(($el) => {
+      const style = $el.attr('style') || '';
+      expect(style).to.match(/width\s*:\s*100%/);
+    });
+
+    cy.get('[data-cy="category-section-custom"]')
+      .find('textarea.inputarea')
+      .click({ force: true })
+      .type('{selectall}{backspace}', { force: true });
+
+    cy.get('[data-component-name="Base.Container"]', { timeout: 10000 }).should(($el) => {
+      const style = $el.attr('style') || '';
+      expect(style).to.not.match(/width\s*:\s*100%/);
+      expect(style).to.not.match(/width\s*:\s*unset/);
+    });
+  });
 });
