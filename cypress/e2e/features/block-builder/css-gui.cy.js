@@ -196,4 +196,73 @@ describe('CSS GUI - Design Controls Validation', () => {
       });
     });
   });
+
+  it('N1: Pseudo Elements Select placeholder state shows no un-capitalized leak', () => {
+    cy.get('[data-cy="palette-item-Base.Container"]').should('be.visible').as('containerPaletteItem');
+    cy.get('[data-cy="bb-root-drop-zone"]').should('be.visible').as('dropZone');
+    cy.get('@containerPaletteItem').drag('@dropZone');
+
+    cy.get('[data-cy="bb-rendered-container"]').first().click({ force: true });
+    cy.get('[data-cy="tab-Design"]').click({ force: true });
+
+    cy.get('[data-cy="pseudo-element-select"]').scrollIntoView().should('be.visible');
+    cy.get('[data-cy="pseudo-element-select-search-input"]').should('have.attr', 'placeholder', 'Select');
+  });
+
+  it('M1: selecting a Pseudo Elements option capitalizes the closed value and every dropdown option', () => {
+    cy.get('[data-cy="palette-item-Base.Container"]').should('be.visible').as('containerPaletteItem');
+    cy.get('[data-cy="bb-root-drop-zone"]').should('be.visible').as('dropZone');
+    cy.get('@containerPaletteItem').drag('@dropZone');
+
+    cy.get('[data-cy="bb-rendered-container"]').first().click({ force: true });
+    cy.get('[data-cy="tab-Design"]').click({ force: true });
+
+    // BEFORE: reopen the dropdown, read every option's raw text + rendered transform.
+    cy.get('[data-cy="pseudo-element-select"]').scrollIntoView().click({ force: true });
+
+    cy.get('[data-cy="pseudo-element-select-dropdown-item"]').should('have.length.greaterThan', 0);
+    cy.get('[data-cy="pseudo-element-select-dropdown-item"]').each(($el) => {
+      expect($el.text()).to.eq($el.text().toLowerCase());
+      expect(window.getComputedStyle($el[0]).textTransform).to.eq('capitalize');
+    });
+
+    // ACTION: select "before".
+    cy.get('[data-cy="pseudo-element-select-dropdown-item"]').contains('before').click({ force: true });
+
+    // AFTER: closed value renders capitalized, in the editor UI font.
+    cy.get('[data-cy="pseudo-element-select-search-input"]').should(($el) => {
+      expect($el.text().trim()).to.eq('before');
+      expect(window.getComputedStyle($el[0]).textTransform).to.eq('capitalize');
+    });
+
+    // Reopened state: dropdown re-opens with the same option still capitalized.
+    cy.get('[data-cy="pseudo-element-select"]').click({ force: true });
+    cy.get('[data-cy="pseudo-element-select-dropdown-item"]')
+      .contains('before')
+      .should(($el) => {
+        expect(window.getComputedStyle($el[0]).textTransform).to.eq('capitalize');
+      });
+  });
+
+  it('N2: capitalize fix does not leak onto the Font Family Select (a different Select consumer)', () => {
+    cy.get('[data-cy="palette-item-Base.Container"]').should('be.visible').as('containerPaletteItem');
+    cy.get('[data-cy="bb-root-drop-zone"]').should('be.visible').as('dropZone');
+    cy.get('@containerPaletteItem').drag('@dropZone');
+
+    cy.get('[data-cy="bb-rendered-container"]').first().click({ force: true });
+    cy.get('[data-cy="tab-Design"]').click({ force: true });
+
+    cy.contains('div', 'Font Family').should('be.visible').scrollIntoView();
+    cy.contains('div', 'Font Family')
+      .parent()
+      .find('[class*="container"]')
+      .first()
+      .click({ force: true });
+
+    cy.get('.select-portal-dropdown [class*="dropdownItem"]').should('have.length.greaterThan', 0);
+    cy.get('.select-portal-dropdown [class*="dropdownItem"]').each(($el) => {
+      expect(window.getComputedStyle($el[0]).textTransform).to.eq('none');
+      expect($el.attr('class')).to.not.include('pseudoElementSelect');
+    });
+  });
 });
