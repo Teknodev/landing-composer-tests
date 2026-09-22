@@ -29,8 +29,30 @@
  * SSE is STUBBED (live LLM output is non-deterministic).
  */
 
-// Test project editor route - same project used by the other AI specs.
-const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+import { assertNoInternalLeak } from '@support/assertNoInternalLeak';
+
+const dismissOnboardingIfPresent = () => {
+  cy.get('body').then(($body) => {
+    const hasOnboarding = $body.find('[data-cy="onboarding-modal"]').length > 0;
+    if (hasOnboarding) {
+      cy.get('[aria-label="Close onboarding for now"]').first().click({ force: true });
+      cy.get('[data-cy="onboarding-modal"]', { timeout: 5000 }).should('not.exist');
+    }
+  });
+};
+
+const DIRTY_PLAN_STEPS = [
+  {
+    id: 'step_0_dirty',
+    text: 'pb_delete_component: Delete the section at index 1 (page_id: 615f1a2b3c4d5e6f70819203)',
+    tool_hint: 'pb_delete_component',
+  },
+  {
+    id: 'step_1_dirty',
+    text: "ct_set_text: Set the About section body (project_id: 615f1a2b3c4d5e6f70819204)",
+    tool_hint: 'ct_set_text',
+  },
+];
 
 // ---------------------------------------------------------------------------
 // SSE helpers
@@ -60,6 +82,29 @@ const PLAN_STEPS = [
 const REPLAN_STEPS = [
   { id: 'step_0_re44aa', text: "Read the Team section prop schema, then set its title prop to 'Meet the team'", tool_hint: 'pb_get_component_schema' },
 ];
+
+function buildDirtyPlanFrames() {
+  return [
+    { event: 'request_started', data: { request_id: 'vpfwa_dirty', sse: true } },
+    { event: 'conversation', data: { conversation_id: 'conv_checklist_dirty' } },
+    { event: 'loop_start', data: { architecture: 'checklist', mode: 'plan' } },
+    { event: 'pending_checklist', data: {
+      checklist_id: 'cl_dirty01',
+      cycle: 1,
+      is_replan: false,
+      steps: DIRTY_PLAN_STEPS,
+      nonce: 'dirty_nonce_1',
+    } },
+    { event: 'done', data: {
+      request_id: 'vpfwa_dirty',
+      conversation_id: 'conv_checklist_dirty',
+      architecture: 'checklist',
+      checklist_status: 'awaiting_approval',
+      pending_checklist: { checklist_id: 'cl_dirty01', cycle: 1, is_replan: false, steps: DIRTY_PLAN_STEPS, nonce: 'dirty_nonce_1' },
+      usage: { prompt_tokens: 40, completion_tokens: 12, total_tokens: 52 },
+    } },
+  ];
+}
 
 function buildPlanFrames() {
   return [
@@ -345,8 +390,13 @@ describe('AI checklist', () => {
   // Shared login + panel open. Setup never asserted in it() bodies.
   beforeEach(() => {
     cy.login();
-    cy.visit(EDITOR_URL);
-    cy.get('[data-cy="ai-assistant-fab"]', { timeout: 15000 }).should('be.visible').click();
+    cy.getTestProjectId().then((projectId) => {
+      cy.visit(`/project/${projectId}/editor/0`);
+    });
+    cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 })
+      .should('exist');
+    dismissOnboardingIfPresent();
+    cy.get('[data-cy="top-bar-ai-trigger"]', { timeout: 15000 }).should('be.visible').click();
     cy.get('[data-cy="ai-assistant-panel"]').should('be.visible');
   });
 
@@ -360,7 +410,7 @@ describe('AI checklist', () => {
     // ---------------------------------------------------------------------
     describe('plan render', () => {
       beforeEach(() => {
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           req.reply(replySSE(buildPlanFrames()));
         }).as('aiPlan');
 
@@ -404,13 +454,35 @@ describe('AI checklist', () => {
       });
     });
 
+    describe('plan render with dirty server text', () => {
+      beforeEach(() => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
+          req.reply(replySSE(buildDirtyPlanFrames()));
+        }).as('aiDirtyPlan');
+
+        cy.get('[data-cy="ai-assistant-composer-input"]').type('delete the extra section');
+        cy.get('[data-cy="ai-assistant-send"]').click();
+        cy.wait('@aiDirtyPlan');
+      });
+
+      it('should strip tool names, ids and indexes from every rendered step even though the server sent them', () => {
+        cy.get('[data-cy="ai-checklist-step"]').should('have.length', 2);
+        cy.get('[data-cy="ai-checklist-step"][data-step-id="step_0_dirty"]')
+          .invoke('text')
+          .then(assertNoInternalLeak);
+        cy.get('[data-cy="ai-checklist-step"][data-step-id="step_1_dirty"]')
+          .invoke('text')
+          .then(assertNoInternalLeak);
+      });
+    });
+
     // ---------------------------------------------------------------------
     // Approve happy path
     // ---------------------------------------------------------------------
     describe('approve happy path', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else req.reply(replySSE(buildHappyExecuteFrames()));
@@ -467,7 +539,7 @@ describe('AI checklist', () => {
     describe('one failure triggers re-plan', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else req.reply(replySSE(buildFailureThenReplanFrames()));
@@ -514,7 +586,7 @@ describe('AI checklist', () => {
     describe('re-plan cap exhausted', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else if (callCount === 2) req.reply(replySSE(buildFailureThenReplanFrames()));
@@ -556,7 +628,7 @@ describe('AI checklist', () => {
     // ---------------------------------------------------------------------
     describe('reject discards the plan', () => {
       beforeEach(() => {
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           if (req.body && req.body.checklist_approval && req.body.checklist_approval.decision === 'reject') {
             req.reply(replySSE([
               { event: 'request_started', data: { request_id: 'vpfwa7', sse: true } },
@@ -610,7 +682,7 @@ describe('AI checklist', () => {
     describe('natural pass', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteNaturalPass()));
@@ -639,7 +711,7 @@ describe('AI checklist', () => {
     describe('retry then pass', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteRetryThenPass()));
@@ -666,7 +738,7 @@ describe('AI checklist', () => {
     describe('iterations exhausted', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteIterationsExhausted()));
@@ -695,7 +767,7 @@ describe('AI checklist', () => {
     describe('verification failed after retry', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteVerificationFailedAfterRetry()));

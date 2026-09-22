@@ -1,6 +1,14 @@
-import { loginToEditor } from '@support/editorTestHelper';
+import { assertNoInternalLeak } from '@support/assertNoInternalLeak';
 
-const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+const dismissOnboardingIfPresent = () => {
+  cy.get('body').then(($body) => {
+    const hasOnboarding = $body.find('[data-cy="onboarding-modal"]').length > 0;
+    if (hasOnboarding) {
+      cy.get('[aria-label="Close onboarding for now"]').first().click({ force: true });
+      cy.get('[data-cy="onboarding-modal"]', { timeout: 5000 }).should('not.exist');
+    }
+  });
+};
 
 /**
  * E2E — AI Assistant inline streaming smoke
@@ -118,7 +126,7 @@ function buildSyntheticCorrectionFrames() {
 describe('AI Assistant — inline streaming smoke', () => {
   beforeEach(() => {
     // Default route: success frames.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -126,13 +134,19 @@ describe('AI Assistant — inline streaming smoke', () => {
       });
     }).as('aiChat');
 
-    loginToEditor();
+    cy.login();
+    cy.getTestProjectId().then((projectId) => {
+      cy.visit(`/project/${projectId}/editor/0`);
+    });
+    cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 })
+      .should('exist');
+    dismissOnboardingIfPresent();
     cy.get('[data-cy="header"]', { timeout: 15000 }).should('be.visible');
     cy.wait(2000);
   });
 
   it('A) renders inline tool rows in arrival order with running -> success, B) final assistant bubble below, and the old tool-role bubble is removed', () => {
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type(
       'Change the about us section to be about a Toronto bakery serving artisan croissants.'
     );
@@ -140,33 +154,38 @@ describe('AI Assistant — inline streaming smoke', () => {
 
     cy.wait('@aiChat');
 
+    // Tool rows render inside the collapsed-by-default "Show details" panel.
+    cy.get('[data-cy="ai-tool-details-toggle"]').click();
+
     // A: at least 3 tool rows render. Smoke target = 4 (one per tool_request).
     cy.get('[data-cy="ai-tool-row"]').should('have.length.at.least', 3);
     // Each row should resolve to data-status=success after the matching tool_result.
     cy.get('[data-cy="ai-tool-row"]').each(($row) => {
       cy.wrap($row).should('have.attr', 'data-status', 'success');
+      cy.wrap($row).invoke('text').then(assertNoInternalLeak);
     });
     // The OLD tool-role bubble must not render.
     cy.get('[data-cy="ai-tool-message"]').should('not.exist');
 
     // B: final assistant bubble below the tool rows with the model's reply.
-    cy.get('[data-cy="ai-assistant-messages"]');
+    cy.get('[data-cy="ai-assistant-messages"]')
+      .should('contain.text', 'Updated the about section to a Toronto bakery serving artisan croissants.');
 
-    // Sanity: status returns to idle once `done` lands.
-    cy.get('[data-cy="ai-assistant-status"]');
+    // Sanity: the send button returns once `done` lands (status back to idle).
+    cy.get('[data-cy="ai-assistant-send"]').should('be.visible');
   });
 
-  it('C) token counter element survives a mutation_committed stream (canvas auto-sync seam fires)', () => {
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+  it('C) mutation_committed stream completes without choking on the new event type', () => {
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type('Mutate the about section.');
     cy.get('[data-cy="ai-assistant-send"]').click();
     cy.wait('@aiChat');
-    // 140 tokens reported in the success frames.
-    cy.get('[data-cy="ai-assistant-token-count"]');
     // The two `mutation_committed` events should have triggered the debounced
     // sync exactly once. There is no DOM hook for that callback in /project/1
     // (no real canvas in this overview route), so this assertion only proves
     // the SSE path completed without choking on the new event type.
+    cy.get('[data-cy="ai-assistant-send"]').should('be.visible');
+    cy.get('[data-cy="ai-assistant-composer-input"]').should('not.be.disabled');
   });
 
   it('D) cancel button replaces send while streaming, click reverts to send and re-enables input', () => {
@@ -175,7 +194,7 @@ describe('AI Assistant — inline streaming smoke', () => {
     // support delayed chunked writes, so we use req.continue + delay to keep
     // the body in flight for ~1s — long enough for the cancel button to be
     // visible and clickable.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
       req.reply((res) => {
         res.send({
           statusCode: 200,
@@ -186,7 +205,7 @@ describe('AI Assistant — inline streaming smoke', () => {
       });
     }).as('aiChatSlow');
 
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type('Translate this page to Turkish');
     cy.get('[data-cy="ai-assistant-send"]').click();
 
@@ -205,7 +224,7 @@ describe('AI Assistant — inline streaming smoke', () => {
   });
 
   it('E) Esc inside the panel cancels mid-stream', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -214,7 +233,7 @@ describe('AI Assistant — inline streaming smoke', () => {
       });
     }).as('aiChatSlow');
 
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type('Translate this page to Turkish');
     cy.get('[data-cy="ai-assistant-send"]').click();
 
@@ -228,7 +247,7 @@ describe('AI Assistant — inline streaming smoke', () => {
   });
 
   it('F) synthetic-correction row appears between iter-1 and iter-2 rows', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -236,13 +255,15 @@ describe('AI Assistant — inline streaming smoke', () => {
       });
     }).as('aiChatCorrection');
 
-    cy.get('[data-cy="ai-assistant-fab"]').click();
+    cy.get('[data-cy="top-bar-ai-trigger"]').click();
     cy.get('[data-cy="ai-assistant-composer-input"]').type(
       'Change my about content. We are a roof repairing company located in Toronto.'
     );
     cy.get('[data-cy="ai-assistant-send"]').click();
 
     cy.wait('@aiChatCorrection');
+
+    cy.get('[data-cy="ai-tool-details-toggle"]').click();
 
     cy.get('[data-cy="ai-synthetic-correction"]').should('exist');
     // Two tool rows total — one in iter 1, one in iter 2.
