@@ -496,4 +496,105 @@ describe('AI element picker', () => {
       });
     });
   });
+
+  describe('stylePick', () => {
+    const styleFrames = [
+      { event: 'request_started', data: { request_id: 'r_style_pick', sse: true } },
+      { event: 'conversation', data: { conversation_id: 'c_style_pick' } },
+      { event: 'iter_start', data: { iter: 1 } },
+      {
+        event: 'assistant_message', data: {
+          iter: 1, content: null,
+          tool_calls: [{ id: 'call_style_pick', name: 'dt_set_property' }],
+        },
+      },
+      {
+        event: 'tool_request',
+        data: {
+          iter: 1, tool_call_id: 'call_style_pick', name: 'dt_set_property',
+          args: { section_name: '__PLACEHOLDER_SECTION__', element_id: '__PLACEHOLDER_ELEMENT__', property: 'background-color', value: 'blue' },
+        },
+      },
+      {
+        event: 'tool_result',
+        data: {
+          iter: 1, tool_call_id: 'call_style_pick', name: 'dt_set_property', ok: true,
+          result: { ok: true, result: { applied: true, index: 0, section_name: '__PLACEHOLDER_SECTION__', element_id: '__PLACEHOLDER_ELEMENT__', property: 'background-color', value: 'blue', breakpoint: 'desktop', pseudo_state: null, selector: '.ai-mgr-style-pick' } },
+        },
+      },
+      { event: 'final_message', data: { content: 'Done — I changed the background color.' } },
+      {
+        event: 'done',
+        data: {
+          request_id: 'r_style_pick',
+          conversation_id: 'c_style_pick',
+          messages: [
+            { role: 'user', content: 'make this background blue' },
+            { role: 'assistant', content: 'Done — I changed the background color.' },
+          ],
+          pending_confirmation: null,
+          trace: [{ iter: 1, type: 'tool', name: 'dt_set_property', tool_call_id: 'call_style_pick', ok: true, status: 'success' }],
+          iterations: 2,
+          usage: { prompt_tokens: 40, completion_tokens: 15, total_tokens: 55 },
+          ctx: { project_id: '1', page_id: null, locale: null },
+        },
+      },
+    ];
+
+    beforeEach(() => {
+      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        const picked = (req.body && req.body.selected_elements && req.body.selected_elements[0]) || {};
+        const framesForRequest = styleFrames.map((f) => {
+          if (f.event !== 'tool_request' && f.event !== 'tool_result') return f;
+          const args = f.event === 'tool_request' ? f.data.args : f.data.result.result;
+          return {
+            ...f,
+            data: {
+              ...f.data,
+              ...(f.event === 'tool_request'
+                ? { args: { ...args, section_name: picked.sectionName, element_id: picked.elementId } }
+                : { result: { ...f.data.result, result: { ...f.data.result.result, section_name: picked.sectionName, element_id: picked.elementId } } }),
+            },
+          };
+        });
+        req.reply({
+          statusCode: 200,
+          headers: { 'content-type': 'text/event-stream' },
+          body: sseBody(framesForRequest),
+        });
+      }).as('aiChatStylePick');
+    });
+
+    it('M1: applies the style tool call to the exact picked element (sectionName + elementId pass through)', () => {
+      cy.get('[data-cy="ai-pick-button"]').click();
+
+      cy.get('[class*="auto-generate-"][class*="-description"]', { timeout: 10000 })
+        .first()
+        .then(($el) => {
+          const domSectionName = 'description';
+          const domElementId = $el.attr('id') || null;
+          pickAt($el);
+
+          cy.get('[data-cy="ai-element-chip"]').should('have.length.at.least', 1);
+
+          cy.get('[data-cy="ai-assistant-composer-input"]').type('make this background blue');
+          cy.get('[data-cy="ai-assistant-send"]').click();
+
+          cy.wait('@aiChatStylePick').then((interception) => {
+            const body = interception.request.body;
+            expect(body.selected_elements, 'selected_elements present').to.be.an('array').and.have.length.at.least(1);
+            const sentFirst = body.selected_elements[0];
+            expect(sentFirst.sectionName, 'sectionName byte-for-byte').to.eq(domSectionName);
+            expect(sentFirst.elementId, 'elementId byte-for-byte').to.eq(domElementId);
+
+            const requestMatch = interception.response.body.match(/event: tool_request\ndata: ([\s\S]*?)\n\n/);
+            expect(requestMatch, 'tool_request frame present').to.not.be.null;
+            const toolRequest = JSON.parse(requestMatch[1]);
+            expect(toolRequest.name, 'style mutator tool name').to.eq('dt_set_property');
+            expect(toolRequest.args.section_name, 'args.section_name byte-for-byte').to.eq(domSectionName);
+            expect(toolRequest.args.element_id, 'args.element_id byte-for-byte').to.eq(domElementId);
+          });
+        });
+    });
+  });
 });
