@@ -7,7 +7,7 @@ const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
  *
  * Validates the new inline tool-call rows (replacing the blocking loader) and
  * the debounced canvas auto-sync seam introduced for SSE streaming. Mocks the
- * `/api/fn-execute/ai/chat` SSE endpoint with a chunked body containing
+ * `/api/fn-execute/v1/ai/chat` SSE endpoint with a chunked body containing
  * deterministic `tool_request`, `tool_result`, `mutation_committed`,
  * `synthetic_correction`, `final_message`, and `done` events so the test does
  * not depend on the live AI router or OpenAI quota.
@@ -118,7 +118,7 @@ function buildSyntheticCorrectionFrames() {
 describe('AI Assistant — inline streaming smoke', () => {
   beforeEach(() => {
     // Default route: success frames.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -175,7 +175,7 @@ describe('AI Assistant — inline streaming smoke', () => {
     // support delayed chunked writes, so we use req.continue + delay to keep
     // the body in flight for ~1s — long enough for the cancel button to be
     // visible and clickable.
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply((res) => {
         res.send({
           statusCode: 200,
@@ -205,7 +205,7 @@ describe('AI Assistant — inline streaming smoke', () => {
   });
 
   it('E) Esc inside the panel cancels mid-stream', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -228,7 +228,7 @@ describe('AI Assistant — inline streaming smoke', () => {
   });
 
   it('F) synthetic-correction row appears between iter-1 and iter-2 rows', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({
         statusCode: 200,
         headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },

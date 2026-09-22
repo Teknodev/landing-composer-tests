@@ -178,7 +178,7 @@ describe('AI Tool Router — mutation flow regression', () => {
   });
 
   it('renders the messages pane and metering after a successful regenerate_section_text mutation', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildHappyPathFrames()) });
     }).as('aiChat');
 
@@ -197,7 +197,7 @@ describe('AI Tool Router — mutation flow regression', () => {
   });
 
   it('reports honest failure rather than fabricating success when every mutation fails', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildHonestFailFrames()) });
     }).as('aiChat');
 
@@ -213,7 +213,7 @@ describe('AI Tool Router — mutation flow regression', () => {
   });
 
   it('renders messages pane, status, and token metering when the server-side synthetic-correction guard recovers a mutation intent', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildGuardPathFrames()) });
     }).as('aiChat');
 

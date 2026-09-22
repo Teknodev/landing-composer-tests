@@ -20,7 +20,7 @@
  *   5. Explicit approval in the user message skips the confirmation card
  *      (backend handles this — returns no pending_confirmation directly).
  *
- * Strategy: mock /api/fn-execute/ai/chat as an SSE stream that plays back
+ * Strategy: mock /api/fn-execute/v1/ai/chat as an SSE stream that plays back
  * deterministic frames. Uses the same sseBody() helper pattern as
  * ai-inline-streaming-smoke.cy.js for consistency with the project test suite.
  *
@@ -181,7 +181,7 @@ describe('AI Intent Confirmation Flow', () => {
   // ---------------------------------------------------------------------------
   describe('Test 1 — Intent confirmation card UI', () => {
     before(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -243,7 +243,7 @@ describe('AI Intent Confirmation Flow', () => {
   describe('Test 2 — Proceed triggers mutation and shows success message', () => {
     before(() => {
       let callCount = 0;
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         callCount += 1;
         if (callCount === 1) {
           req.reply({
@@ -310,7 +310,7 @@ describe('AI Intent Confirmation Flow', () => {
   // ---------------------------------------------------------------------------
   describe('Test 3 — Cancel aborts cleanly with no canvas change', () => {
     before(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
@@ -334,7 +334,7 @@ describe('AI Intent Confirmation Flow', () => {
 
       // Track whether a second call fires (it should NOT)
       let secondCallFired = false;
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', () => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', () => {
         secondCallFired = true;
       }).as('aiChatSecond');
 
@@ -372,7 +372,7 @@ describe('AI Intent Confirmation Flow', () => {
   // ---------------------------------------------------------------------------
   describe('Test 4 — Explicit approval bypasses the confirmation card', () => {
     before(() => {
-      cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+      cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
         req.reply({
           statusCode: 200,
           headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },

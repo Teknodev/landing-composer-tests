@@ -3,7 +3,7 @@
  *
  * Validates the in-editor chat panel that drives the OpenAI tool-calling backend.
  *
- * Strategy: mock /api/fn-execute/ai/chat with SSE cy.intercept so tests are
+ * Strategy: mock /api/fn-execute/v1/ai/chat with SSE cy.intercept so tests are
  * deterministic and don't depend on the real OpenAI key/quota.
  * Uses the same SSE frame format as ai-inline-streaming-smoke.cy.js.
  */
@@ -149,7 +149,7 @@ describe('AI Assistant Panel', () => {
   });
 
   it('opens the panel from the floating action button', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildNonDestructiveFrames()) });
     }).as('aiChat');
 
@@ -159,7 +159,7 @@ describe('AI Assistant Panel', () => {
   });
 
   it('sends a non-destructive prompt and renders the tool round + final assistant message', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildNonDestructiveFrames()) });
     }).as('aiChat');
 
@@ -178,7 +178,7 @@ describe('AI Assistant Panel', () => {
   });
 
   it('halts on destructive tool and surfaces a confirmation card', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildDestructiveFrames()) });
     }).as('aiChat');
 
@@ -197,7 +197,7 @@ describe('AI Assistant Panel', () => {
 
   it('continues the chain after the user confirms the destructive tool', () => {
     let firstCalled = false;
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       if (!firstCalled) {
         firstCalled = true;
         req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildDestructiveFrames()) });
@@ -231,7 +231,7 @@ describe('AI Assistant Panel', () => {
   });
 
   it('skips a destructive tool when the user cancels and adds an assistant note', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildDestructiveFrames()) });
     }).as('aiChat');
 
@@ -249,7 +249,7 @@ describe('AI Assistant Panel', () => {
   });
 
   it('reset clears the transcript and token counter', () => {
-    cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+    cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
       req.reply({ statusCode: 200, headers: { 'content-type': 'text/event-stream' }, body: sseBody(buildNonDestructiveFrames()) });
     }).as('aiChat');
 

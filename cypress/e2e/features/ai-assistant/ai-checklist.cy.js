@@ -360,7 +360,7 @@ describe('AI checklist', () => {
     // ---------------------------------------------------------------------
     describe('plan render', () => {
       beforeEach(() => {
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           req.reply(replySSE(buildPlanFrames()));
         }).as('aiPlan');
 
@@ -410,7 +410,7 @@ describe('AI checklist', () => {
     describe('approve happy path', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else req.reply(replySSE(buildHappyExecuteFrames()));
@@ -467,7 +467,7 @@ describe('AI checklist', () => {
     describe('one failure triggers re-plan', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else req.reply(replySSE(buildFailureThenReplanFrames()));
@@ -514,7 +514,7 @@ describe('AI checklist', () => {
     describe('re-plan cap exhausted', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildPlanFrames()));
           else if (callCount === 2) req.reply(replySSE(buildFailureThenReplanFrames()));
@@ -556,7 +556,7 @@ describe('AI checklist', () => {
     // ---------------------------------------------------------------------
     describe('reject discards the plan', () => {
       beforeEach(() => {
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           if (req.body && req.body.checklist_approval && req.body.checklist_approval.decision === 'reject') {
             req.reply(replySSE([
               { event: 'request_started', data: { request_id: 'vpfwa7', sse: true } },
@@ -610,7 +610,7 @@ describe('AI checklist', () => {
     describe('natural pass', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteNaturalPass()));
@@ -639,7 +639,7 @@ describe('AI checklist', () => {
     describe('retry then pass', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteRetryThenPass()));
@@ -666,7 +666,7 @@ describe('AI checklist', () => {
     describe('iterations exhausted', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteIterationsExhausted()));
@@ -695,7 +695,7 @@ describe('AI checklist', () => {
     describe('verification failed after retry', () => {
       beforeEach(() => {
         let callCount = 0;
-        cy.intercept('POST', '**/api/fn-execute/ai/chat', (req) => {
+        cy.intercept('POST', '**/api/fn-execute/v1/ai/chat', (req) => {
           callCount += 1;
           if (callCount === 1) req.reply(replySSE(buildV2PlanFrames()));
           else req.reply(replySSE(buildExecuteVerificationFailedAfterRetry()));
