@@ -25,8 +25,9 @@ export const TEST_PROJECT_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
 export const loginToEditor = () => {
   cy.login();
 
-  // Navigate to the test project editor (auth token already in localStorage).
-  cy.visit(TEST_PROJECT_URL);
+  cy.getTestProjectId().then((projectId) => {
+    cy.visit(`/project/${projectId}/editor/0`);
+  });
 
   // Wait for the editor to be fully ready:
   // Either the canvas has components OR the empty-canvas placeholder is shown.

@@ -1,4 +1,4 @@
-import { addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
+import { loginToEditor, addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
 
 /**
  * Video Background E2E Tests
@@ -33,21 +33,6 @@ const setReactInputValue = (selector) => {
     $input[0].dispatchEvent(new Event('input', { bubbles: true }));
     $input[0].dispatchEvent(new Event('change', { bubbles: true }));
   });
-};
-
-const openEditor = () => {
-  cy.login();
-  cy.request('POST', `${Cypress.env('API_URL')}/fn-execute/v1/auth/login`, {
-    email: Cypress.env('AUTH_USERNAME'),
-    password: Cypress.env('AUTH_PASSWORD'),
-  }).then(({ body }) => {
-    cy.getTestProjectId().then((projectId) => {
-      cy.visit(`/project/${projectId}/editor/0`, {
-        onBeforeLoad: (win) => win.localStorage.setItem('user_onboarding_dismissed', body.user._id),
-      });
-    });
-  });
-  cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 }).should('exist');
 };
 
 const expandBackgroundSection = () => {
@@ -104,7 +89,7 @@ const setVideoUrl = () => {
 
 describe('Video Background - Set & Remove', () => {
   beforeEach(() => {
-    openEditor();
+    loginToEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
@@ -163,7 +148,7 @@ describe('Video Background - Set & Remove', () => {
 
 describe('Video Background - Base wrapper selected from Design Tree', () => {
   beforeEach(() => {
-    openEditor();
+    loginToEditor();
     clearPlayground();
     addComponent('intro', 0);
   });
@@ -190,7 +175,7 @@ describe('Video Background - Base wrapper selected from Design Tree', () => {
 
 describe('Video Background - Persistence', () => {
   beforeEach(() => {
-    openEditor();
+    loginToEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
