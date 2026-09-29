@@ -1,4 +1,4 @@
-import { loginToEditor, addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
+import { addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
 
 /**
  * Video Background E2E Tests
@@ -35,28 +35,82 @@ const setReactInputValue = (selector) => {
   });
 };
 
-/**
- * Click a component section's container, switch to Design tab,
- * then expand the Background section.
- */
-const openBackgroundPanel = () => {
-  // Click the first component section to select it
+let onboardingUserId = null;
+
+const resolveOnboardingUserId = () => {
+  if (onboardingUserId) return cy.wrap(onboardingUserId, { log: false });
+  return cy
+    .request({
+      method: 'POST',
+      url: `${Cypress.env('API_URL')}/fn-execute/v1/auth/login`,
+      body: { email: Cypress.env('AUTH_USERNAME'), password: Cypress.env('AUTH_PASSWORD') },
+      log: false,
+    })
+    .then((response) => {
+      onboardingUserId = (response.body.user && response.body.user._id) || '';
+      return onboardingUserId;
+    });
+};
+
+const openEditor = () => {
+  cy.login();
+  resolveOnboardingUserId().then((userId) => {
+    cy.getTestProjectId().then((projectId) => {
+      cy.visit(`/project/${projectId}/editor/0`, {
+        onBeforeLoad: (win) => {
+          if (userId) win.localStorage.setItem('user_onboarding_dismissed', userId);
+        },
+      });
+    });
+  });
+  cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 }).should('exist');
+};
+
+const expandBackgroundSection = () => {
+  cy.get('[data-cy="category-section-background"]', { timeout: 10000 })
+    .scrollIntoView()
+    .then(($section) => {
+      if (!$section.children().last().is(':visible')) {
+        cy.wrap($section.children().first()).click();
+      }
+    });
+  cy.get('[data-cy="video-bg-tab-video"]', { timeout: 5000 }).should('be.visible');
+};
+
+const expandCollapsedTreeBranches = () => {
+  cy.get('body').then(($body) => {
+    const $closed = $body.find('[aria-label="Expand or collapse branch"][aria-expanded="false"]');
+    if ($closed.length > 0) {
+      cy.wrap($closed.first()).click({ force: true });
+      cy.wait(200);
+      expandCollapsedTreeBranches();
+    }
+  });
+};
+
+const openBackgroundPanel = (treeNodeTitleId, parentNodeTitleId) => {
   cy.get('[data-component-index="0"]', { timeout: 10000 }).click({ force: true });
   cy.wait(500);
 
-  // Switch to the Design tab
   cy.get('[data-cy="tab-DESIGN"]', { timeout: 5000 }).should('be.visible').click();
   cy.wait(500);
 
-  // Click within the section to trigger setSelectedSection (required for CSSGUI to work)
   cy.get('[data-component-index="0"]').within(() => {
     cy.get('[data-cy="blinkpage-tag"]').first().click({ force: true });
   });
   cy.wait(500);
 
-  // Open the Background category section in the CSS GUI panel
-  cy.get('[data-cy="category-section-background"]', { timeout: 10000 }).scrollIntoView().click({ force: true });
-  cy.wait(500);
+  if (treeNodeTitleId) {
+    expandCollapsedTreeBranches();
+    if (parentNodeTitleId) {
+      cy.get(`[data-cy="${parentNodeTitleId}"]`, { timeout: 10000 }).first().scrollIntoView().click();
+      cy.wait(500);
+    }
+    cy.get(`[data-cy="${treeNodeTitleId}"]`, { timeout: 10000 }).first().scrollIntoView().click();
+    cy.wait(500);
+  }
+
+  expandBackgroundSection();
 };
 
 /**
@@ -69,11 +123,20 @@ const switchToVideoTab = () => {
   cy.wait(300);
 };
 
+const setVideoUrl = () => {
+  cy.get('[data-cy="video-bg-empty"]', { timeout: 5000 }).scrollIntoView().click({ force: true });
+  cy.get('[data-cy="upload-popover-rail-item-link"]', { timeout: 5000 }).click({ force: true });
+  cy.get('[data-cy="video-bg-url-input"]').should('be.visible');
+  setReactInputValue('[data-cy="video-bg-url-input"]');
+  cy.get('[data-cy="video-bg-url-add"]').should('not.be.disabled').click({ force: true });
+  cy.get('[data-cy="upload-popover-save"]', { timeout: 5000 }).click({ force: true });
+};
+
 // ── Setting Video URL ───────────────────────────────────────────
 
 describe('Video Background - Set & Remove', () => {
   beforeEach(() => {
-    loginToEditor();
+    openEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
@@ -87,7 +150,7 @@ describe('Video Background - Set & Remove', () => {
     switchToVideoTab();
 
     cy.get('[data-cy="video-bg-panel"]', { timeout: 5000 }).should('be.visible');
-    cy.get('[data-cy="video-bg-url-input"]').should('be.visible');
+    cy.get('[data-cy="video-bg-empty"]').should('be.visible');
     cy.get('[data-cy="video-bg-preview"]').should('not.exist');
   });
 
@@ -95,9 +158,7 @@ describe('Video Background - Set & Remove', () => {
     openBackgroundPanel();
     switchToVideoTab();
 
-    // Use atomic value setter to avoid conditional-render switching mid-type
-    cy.get('[data-cy="video-bg-url-input"]').should('be.visible');
-    setReactInputValue('[data-cy="video-bg-url-input"]');
+    setVideoUrl();
 
     cy.wait(1000);
 
@@ -115,9 +176,7 @@ describe('Video Background - Set & Remove', () => {
     openBackgroundPanel();
     switchToVideoTab();
 
-    // Set a video first using atomic value setter
-    cy.get('[data-cy="video-bg-url-input"]').should('be.visible');
-    setReactInputValue('[data-cy="video-bg-url-input"]');
+    setVideoUrl();
 
     cy.wait(1000);
 
@@ -126,11 +185,46 @@ describe('Video Background - Set & Remove', () => {
 
     // Click remove button (hover overlay)
     cy.get('[data-cy="video-bg-remove-btn"]').click({ force: true });
-    cy.wait(500);
+    cy.get('[data-cy="video-bg-preview"]', { timeout: 5000 }).should('not.exist');
 
-    // Should go back to empty URL input state
-    cy.get('[data-cy="video-bg-url-input"]', { timeout: 5000 }).should('be.visible');
+    switchToVideoTab();
+    cy.get('[data-cy="video-bg-empty"]', { timeout: 5000 }).should('be.visible');
     cy.get('[data-cy="video-bg-preview"]').should('not.exist');
+  });
+});
+
+const WRAPPER_CASES = [
+  { id: 'M1', label: 'Base.MaxContent', category: 'about', index: 0, treeNode: 'tree-node-title-max-content', element: 'base.MaxContent' },
+  { id: 'M2', label: 'Base.VerticalContent', category: 'download', index: 0, treeNode: 'tree-node-title-vertical-content', element: 'base.VerticalContent' },
+  { id: 'M3', label: 'Base.Card', category: 'download', index: 1, parentNode: 'tree-node-title-cards', treeNode: 'tree-node-title-card-shell', element: 'base.Card' },
+];
+
+describe('Video Background - Base wrapper selected from Design Tree', () => {
+  beforeEach(() => {
+    cy.on('uncaught:exception', (err) => !/status code 404/.test(err.message));
+  });
+
+  afterEach(() => {
+    resetPlayground();
+  });
+
+  WRAPPER_CASES.forEach(({ id, label, category, index, parentNode, treeNode, element }) => {
+    it(`${id}: should inject a background video into ${label} selected from the Design Tree`, () => {
+      openEditor();
+      clearPlayground();
+      addComponent(category, index);
+
+      openBackgroundPanel(treeNode, parentNode);
+      switchToVideoTab();
+      setVideoUrl();
+
+      cy.get('[data-cy="video-bg-preview"]', { timeout: 10000 }).should('exist');
+
+      cy.get(`[data-component-index="0"] [data-element-category="${element}"]`, { timeout: 10000 })
+        .first()
+        .find('video[data-bg-video]', { timeout: 10000 })
+        .should('have.length', 1);
+    });
   });
 });
 
@@ -138,7 +232,7 @@ describe('Video Background - Set & Remove', () => {
 
 describe('Video Background - Persistence', () => {
   beforeEach(() => {
-    loginToEditor();
+    openEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
@@ -151,9 +245,7 @@ describe('Video Background - Persistence', () => {
     openBackgroundPanel();
     switchToVideoTab();
 
-    // Set a video URL using atomic value setter
-    cy.get('[data-cy="video-bg-url-input"]').should('be.visible');
-    setReactInputValue('[data-cy="video-bg-url-input"]');
+    setVideoUrl();
 
     cy.wait(1500);
 
