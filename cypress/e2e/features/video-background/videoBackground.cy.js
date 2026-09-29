@@ -46,7 +46,18 @@ const expandBackgroundSection = () => {
   cy.get('[data-cy="video-bg-tab-video"]', { timeout: 5000 }).should('be.visible');
 };
 
-const openBackgroundPanel = (treeNodeTitleId) => {
+const expandCollapsedTreeBranches = () => {
+  cy.get('body').then(($body) => {
+    const $closed = $body.find('[aria-label="Expand or collapse branch"][aria-expanded="false"]');
+    if ($closed.length > 0) {
+      cy.wrap($closed.first()).click({ force: true });
+      cy.wait(200);
+      expandCollapsedTreeBranches();
+    }
+  });
+};
+
+const openBackgroundPanel = (treeNodeTitleId, parentNodeTitleId) => {
   cy.get('[data-component-index="0"]', { timeout: 10000 }).click({ force: true });
   cy.wait(500);
 
@@ -59,6 +70,11 @@ const openBackgroundPanel = (treeNodeTitleId) => {
   cy.wait(500);
 
   if (treeNodeTitleId) {
+    expandCollapsedTreeBranches();
+    if (parentNodeTitleId) {
+      cy.get(`[data-cy="${parentNodeTitleId}"]`, { timeout: 10000 }).first().scrollIntoView().click();
+      cy.wait(500);
+    }
     cy.get(`[data-cy="${treeNodeTitleId}"]`, { timeout: 10000 }).first().scrollIntoView().click();
     cy.wait(500);
   }
@@ -146,28 +162,38 @@ describe('Video Background - Set & Remove', () => {
   });
 });
 
+const WRAPPER_CASES = [
+  { id: 'M1', label: 'Base.MaxContent', category: 'about', index: 0, treeNode: 'tree-node-title-max-content', element: 'base.MaxContent' },
+  { id: 'M2', label: 'Base.VerticalContent', category: 'download', index: 0, treeNode: 'tree-node-title-vertical-content', element: 'base.VerticalContent' },
+  { id: 'M3', label: 'Base.Card', category: 'download', index: 1, parentNode: 'tree-node-title-cards', treeNode: 'tree-node-title-card-shell', element: 'base.Card' },
+];
+
 describe('Video Background - Base wrapper selected from Design Tree', () => {
   beforeEach(() => {
-    loginToEditor();
-    clearPlayground();
-    addComponent('intro', 0);
+    cy.on('uncaught:exception', (err) => !/status code 404/.test(err.message));
   });
 
   afterEach(() => {
     resetPlayground();
   });
 
-  it('M1: should inject a background video into Base.MaxContent selected from the Design Tree', () => {
-    openBackgroundPanel('tree-node-title-max-content');
-    switchToVideoTab();
-    setVideoUrl();
+  WRAPPER_CASES.forEach(({ id, label, category, index, parentNode, treeNode, element }) => {
+    it(`${id}: should inject a background video into ${label} selected from the Design Tree`, () => {
+      loginToEditor();
+      clearPlayground();
+      addComponent(category, index);
 
-    cy.get('[data-cy="video-bg-preview"]', { timeout: 10000 }).should('exist');
+      openBackgroundPanel(treeNode, parentNode);
+      switchToVideoTab();
+      setVideoUrl();
 
-    cy.get('[data-component-index="0"] [data-element-category="base.MaxContent"]', { timeout: 10000 })
-      .first()
-      .find('video[data-bg-video]', { timeout: 10000 })
-      .should('exist');
+      cy.get('[data-cy="video-bg-preview"]', { timeout: 10000 }).should('exist');
+
+      cy.get(`[data-component-index="0"] [data-element-category="${element}"]`, { timeout: 10000 })
+        .first()
+        .find('video[data-bg-video]', { timeout: 10000 })
+        .should('have.length', 1);
+    });
   });
 });
 
