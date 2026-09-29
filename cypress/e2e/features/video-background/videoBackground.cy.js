@@ -1,4 +1,4 @@
-import { loginToEditor, addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
+import { addComponent, clearPlayground, resetPlayground } from '@support/editorTestHelper';
 
 /**
  * Video Background E2E Tests
@@ -33,6 +33,14 @@ const setReactInputValue = (selector) => {
     $input[0].dispatchEvent(new Event('input', { bubbles: true }));
     $input[0].dispatchEvent(new Event('change', { bubbles: true }));
   });
+};
+
+const openEditor = () => {
+  cy.login();
+  cy.getTestProjectId().then((projectId) => {
+    cy.visit(`/project/${projectId}/editor/0`);
+  });
+  cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 }).should('exist');
 };
 
 const expandBackgroundSection = () => {
@@ -105,7 +113,7 @@ const setVideoUrl = () => {
 
 describe('Video Background - Set & Remove', () => {
   beforeEach(() => {
-    loginToEditor();
+    openEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
@@ -179,7 +187,7 @@ describe('Video Background - Base wrapper selected from Design Tree', () => {
 
   WRAPPER_CASES.forEach(({ id, label, category, index, parentNode, treeNode, element }) => {
     it(`${id}: should inject a background video into ${label} selected from the Design Tree`, () => {
-      loginToEditor();
+      openEditor();
       clearPlayground();
       addComponent(category, index);
 
@@ -201,7 +209,7 @@ describe('Video Background - Base wrapper selected from Design Tree', () => {
 
 describe('Video Background - Persistence', () => {
   beforeEach(() => {
-    loginToEditor();
+    openEditor();
     clearPlayground();
     addComponent('hero', 0);
   });
