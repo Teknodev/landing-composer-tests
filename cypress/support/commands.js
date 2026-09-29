@@ -62,9 +62,6 @@ Cypress.Commands.add('login', (overrides = {}) => {
           win.localStorage.setItem('token', token);
           // Clear anonymous flag so the editor treats this as a real user.
           win.localStorage.setItem('isAnonim', 'false');
-          if (response.body.user && response.body.user._id) {
-            win.localStorage.setItem('user_onboarding_dismissed', response.body.user._id);
-          }
         });
 
         // Hardening: call the same verifyToken endpoint AppInitializer hits

@@ -35,10 +35,33 @@ const setReactInputValue = (selector) => {
   });
 };
 
+let onboardingUserId = null;
+
+const resolveOnboardingUserId = () => {
+  if (onboardingUserId) return cy.wrap(onboardingUserId, { log: false });
+  return cy
+    .request({
+      method: 'POST',
+      url: `${Cypress.env('API_URL')}/fn-execute/v1/auth/login`,
+      body: { email: Cypress.env('AUTH_USERNAME'), password: Cypress.env('AUTH_PASSWORD') },
+      log: false,
+    })
+    .then((response) => {
+      onboardingUserId = (response.body.user && response.body.user._id) || '';
+      return onboardingUserId;
+    });
+};
+
 const openEditor = () => {
   cy.login();
-  cy.getTestProjectId().then((projectId) => {
-    cy.visit(`/project/${projectId}/editor/0`);
+  resolveOnboardingUserId().then((userId) => {
+    cy.getTestProjectId().then((projectId) => {
+      cy.visit(`/project/${projectId}/editor/0`, {
+        onBeforeLoad: (win) => {
+          if (userId) win.localStorage.setItem('user_onboarding_dismissed', userId);
+        },
+      });
+    });
   });
   cy.get('[data-component-index], [data-cy="add-component-placeholder"]', { timeout: 30000 }).should('exist');
 };
