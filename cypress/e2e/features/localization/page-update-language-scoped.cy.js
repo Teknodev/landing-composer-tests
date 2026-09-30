@@ -40,7 +40,7 @@
  */
 import { loginToEditor, TEST_PROJECT_URL } from '@support/editorTestHelper';
 
-const PROJECT_ID = '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 const DEFAULT_LANG_CODE = 'en';
 const SECONDARY_LANG_CODE = 'tr';
 const SECONDARY_LANG_NAME = 'Turkish';
@@ -71,7 +71,7 @@ const resetProjectLanguagesViaApi = () => {
     // so slow /fn-execute/* roundtrips under CI load don't abort the cleanup.
     cy.request({
       method: 'PATCH',
-      url: `http://localhost:4501/api/fn-execute/v1/projects/${PROJECT_ID}/languages`,
+      url: `${Cypress.env('API_URL')}/fn-execute/v1/projects/${PROJECT_ID}/languages`,
       headers: { Authorization: token, 'Content-Type': 'application/json' },
       body: {
         current_language: DEFAULT_LANG_CODE,

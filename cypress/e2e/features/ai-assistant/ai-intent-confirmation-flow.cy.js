@@ -29,8 +29,8 @@
  */
 
 // The test project editor route — uses the test user's real project ID.
-// Project "FinalProject" (69f515295ac7bd7572f9590c) owned by blinkpage1@hotmail.com.
-const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+// The test project (TEST_PROJECT_ID) owned by the test account.
+const EDITOR_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/editor/0`;
 
 // ---------------------------------------------------------------------------
 // Auth helper — logs in and navigates to the editor
@@ -96,7 +96,7 @@ function buildIntentConfirmationFrames() {
       ],
       iterations: 1,
       usage: { prompt_tokens: 120, completion_tokens: 45, total_tokens: 165 },
-      ctx: { project_id: '69f515295ac7bd7572f9590c', page_id: null, locale: null },
+      ctx: { project_id: Cypress.env('TEST_PROJECT_ID'), page_id: null, locale: null },
     } },
   ];
 }
@@ -129,7 +129,7 @@ function buildProceedFrames() {
       ],
       iterations: 3,
       usage: { prompt_tokens: 160, completion_tokens: 60, total_tokens: 220 },
-      ctx: { project_id: '69f515295ac7bd7572f9590c', page_id: null, locale: null },
+      ctx: { project_id: Cypress.env('TEST_PROJECT_ID'), page_id: null, locale: null },
     } },
   ];
 }
@@ -166,7 +166,7 @@ function buildExplicitApprovalFrames() {
       ],
       iterations: 2,
       usage: { prompt_tokens: 130, completion_tokens: 50, total_tokens: 180 },
-      ctx: { project_id: '69f515295ac7bd7572f9590c', page_id: null, locale: null },
+      ctx: { project_id: Cypress.env('TEST_PROJECT_ID'), page_id: null, locale: null },
     } },
   ];
 }

@@ -52,6 +52,10 @@ module.exports = defineConfig({
       // Spica API base URL used by cy.login() to POST /fn-execute/login.
       // Must match the editor's VITE_API_URL (see landing-composer/.env.local).
       API_URL: "http://localhost:4501/api",
+      // The project every editor spec opens. Must exist on the API_URL backend
+      // and belong to the test account. Override with CYPRESS_TEST_PROJECT_ID
+      // (the CI run uses a project set aside for it on staging).
+      TEST_PROJECT_ID: "69f515295ac7bd7572f9590c",
     },
   },
 });

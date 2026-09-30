@@ -1,6 +1,6 @@
 import { loginToEditor } from '@support/editorTestHelper';
 
-const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+const EDITOR_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/editor/0`;
 
 /**
  * E2E — AI Assistant 3-Phase Flow

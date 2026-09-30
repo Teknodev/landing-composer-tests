@@ -17,7 +17,7 @@
 
 import { loginToEditor } from '@support/editorTestHelper';
 
-const BB_URL = '/project/69f515295ac7bd7572f9590c/blockbuilder?component=TestComponent';
+const BB_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/blockbuilder?component=TestComponent`;
 
 describe('Block Builder — Lexical Content Tab editor regression', () => {
   beforeEach(() => {

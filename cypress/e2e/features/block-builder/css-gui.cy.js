@@ -1,8 +1,8 @@
 import '@4tw/cypress-drag-drop';
 import { loginToEditor } from '@support/editorTestHelper';
 
-const BB_URL = '/project/69f515295ac7bd7572f9590c/blockbuilder?component=TestComponent';
-const BB_CONTAINER_URL = '/project/69f515295ac7bd7572f9590c/blockbuilder?component=Base.Container';
+const BB_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/blockbuilder?component=TestComponent`;
+const BB_CONTAINER_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/blockbuilder?component=Base.Container`;
 
 describe('CSS GUI - Design Controls Validation', () => {
   beforeEach(() => {
