@@ -11,8 +11,12 @@
  *     addComponent('team', 0);
  *   });
  */
-/** The fixed test project URL — all editor tests share this project. */
-export const TEST_PROJECT_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+/**
+ * The test project's editor — all editor tests share this project.
+ * TEST_PROJECT_ID comes from cypress.config.js; CI sets its own through
+ * CYPRESS_TEST_PROJECT_ID.
+ */
+export const TEST_PROJECT_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/editor/0`;
 
 /**
  * Log in via the centralized cy.login() programmatic command, then navigate

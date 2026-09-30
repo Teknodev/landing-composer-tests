@@ -30,7 +30,7 @@
  */
 
 // Test project editor route - same project used by the other AI specs.
-const EDITOR_URL = '/project/69f515295ac7bd7572f9590c/editor/0';
+const EDITOR_URL = `/project/${Cypress.env('TEST_PROJECT_ID')}/editor/0`;
 
 // ---------------------------------------------------------------------------
 // SSE helpers

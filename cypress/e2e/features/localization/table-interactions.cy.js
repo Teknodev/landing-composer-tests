@@ -11,7 +11,7 @@ import localizationData from '@fixtures/localizationData.json';
 // playground sync on cell edit.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROJECT_ID = '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 
 const stubLocalizationLimits = () => {
   cy.intercept('GET', `**/v1/projects/${PROJECT_ID}**`, (req) => {

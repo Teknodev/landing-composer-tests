@@ -11,7 +11,7 @@
 
 import { loginToEditor } from '@support/editorTestHelper';
 
-const PROJECT_ID = Cypress.env('TEST_PROJECT_ID') || '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 const EDITOR_URL = `/project/${PROJECT_ID}/editor/0`;
 
 describe('Block Builder — Quick Save version-specific rendering regression', () => {

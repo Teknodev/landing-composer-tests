@@ -16,7 +16,7 @@ import { abTestingPage } from '@pages-po/abTestingPage';
 //   Tests that only verify the UI structure (PageSettingsModal section) run for all accounts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROJECT_ID = '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 
 /**
  * Inject Pro-level AB testing entitlements by intercepting the project API response.

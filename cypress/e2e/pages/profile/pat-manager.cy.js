@@ -10,7 +10,7 @@
  *   6. 10-token limit (intercept 409_LIMIT_REACHED)
  *   7. Logger audit (PatManager / PATService traces fire)
  *
- * Backend deployed to local Spica at http://localhost:4501/api per
+ * Backend at API_URL (cypress.config.js; the CI run points it at staging) per
  * `/tmp/agent-handoff/pat-backend.json#deploy`.
  *
  * NOTE: the brief lists `pat-test@blinkpage.local` as the test identity, but the
@@ -21,7 +21,7 @@
 
 import data from '@fixtures/data.json';
 
-const API_BASE = 'http://localhost:4501/api/fn-execute';
+const API_BASE = `${Cypress.env('API_URL')}/fn-execute`;
 const PAT_LIST_URL = `${API_BASE}/pat`;
 const PAT_CREATE_URL = `${API_BASE}/pat`;
 const PAT_REVOKE_URL_PATTERN = `${API_BASE}/pat/*`;
@@ -81,7 +81,7 @@ const purgePatsViaApi = () => {
   return cy
     .request({
       method: 'POST',
-      url: 'http://localhost:4501/api/passport/identify',
+      url: `${Cypress.env('API_URL')}/passport/identify`,
       body: { identifier: 'spica', password: 'spica' },
       failOnStatusCode: false,
       timeout: 60000,
@@ -92,7 +92,7 @@ const purgePatsViaApi = () => {
       return cy
         .request({
           method: 'GET',
-          url: `http://localhost:4501/api/bucket/${PAT_BUCKET_ID}/data?limit=50`,
+          url: `${Cypress.env('API_URL')}/bucket/${PAT_BUCKET_ID}/data?limit=50`,
           headers: { Authorization: `IDENTITY ${adminToken}` },
           failOnStatusCode: false,
           timeout: 60000,
@@ -102,7 +102,7 @@ const purgePatsViaApi = () => {
           listRes.body.forEach((row) => {
             cy.request({
               method: 'DELETE',
-              url: `http://localhost:4501/api/bucket/${PAT_BUCKET_ID}/data/${row._id}`,
+              url: `${Cypress.env('API_URL')}/bucket/${PAT_BUCKET_ID}/data/${row._id}`,
               headers: { Authorization: `IDENTITY ${adminToken}` },
               failOnStatusCode: false,
               timeout: 60000,

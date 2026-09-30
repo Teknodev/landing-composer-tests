@@ -24,7 +24,7 @@ import { abTestingPage } from '@pages-po/abTestingPage';
 // soft-pass `cy.log()` branches.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROJECT_ID = '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 const AWAITING_TEST_ID = 'test-auto-ab-awaiting';
 
 // ─── Stub helpers ────────────────────────────────────────────────────────────

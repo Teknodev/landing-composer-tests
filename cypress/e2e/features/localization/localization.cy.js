@@ -13,7 +13,7 @@ import localizationData from '@fixtures/localizationData.json';
 // loginToEditor() → cy.visit(TEST_PROJECT_URL).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PROJECT_ID = '69f515295ac7bd7572f9590c';
+const PROJECT_ID = Cypress.env('TEST_PROJECT_ID');
 
 /**
  * Stub the project API to inject unlimited localization slots.
